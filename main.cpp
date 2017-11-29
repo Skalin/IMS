@@ -23,7 +23,7 @@ const int CestujiciVeseli = 550;
 const int CestujiciBucovice = 250;
 const int CestujiciSlavkov = 200;
 
-const int PocetStanic = 3;
+const int PocetStanic = 2;
 Queue cekaniBucovice("Cekani ve stanici Bucovice");
 Queue cekaniSlavkov("Cekani ve stanici Slavkov");
 
@@ -70,7 +70,6 @@ public:
 
 	void Behavior() {
 		int time = TimeOfDay();
-		(new Cestujici(stanice))->Activate();
 		if ((time >= 5*3600) && (time < 8*3600+1800)) {
 			if (stanice == 0) {
 				Activate(time+Exponential(92));
@@ -85,7 +84,10 @@ public:
 			}
 		} else {
 			// wtf v noci nechodi s nejakym timem?
+			Print("Lezu do else\n");
 		}
+
+		(new Cestujici(stanice))->Activate();
 	}
 
 	int stanice;
@@ -96,9 +98,7 @@ int main() {
 	Print("Model vlakove trasy Bucovice - Brno\n");
 	SetOutput("model.out");
 	RandomSeed(time(NULL));
-	Init(0,3600*24);
-	(new Generator(0))->Activate();
-	(new Generator(1))->Activate();
+	Init(0,86400);
 	(new Generator(0))->Activate();
 	(new Generator(1))->Activate();
 	Run();
