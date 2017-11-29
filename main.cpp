@@ -1,4 +1,8 @@
 #include "simlib.h"
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <cstring>
 
 
 
@@ -33,12 +37,25 @@ int TimeOfDay(){
 }
 
 class Cestujici : public Process {
+public:
+	Cestujici(int Stanice) : Process() {
+		stanice = Stanice;
+	}
 
 	void Behavior() {
-		//double time = Time;
+		double Prichod = Time;
 
-
+		if (stanice == 0) {
+			Into(cekaniBucovice);
+			Wait(Exponential(10));
+		} else if (stanice == 1) {
+			Into(cekaniSlavkov);
+			Wait(Exponential(10));
+		}
+		Table(Time-Prichod);
 	}
+
+	int stanice;
 };
 
 
@@ -49,27 +66,27 @@ class Vlak : public Process {
 
 class Generator : public Event {
 public:
-	Generator(bool Stanice) : Event() {
+	Generator(int Stanice) : Event() {
 		stanice = Stanice; // stanice 0 (false) jsou Bucovice, stanice 1 (true) je Slavkov
 	}
 
 	void Behavior() {
 		int time = TimeOfDay();
-		(new Cestujici)->Activate();
+		(new Cestujici(stanice))->Activate();
 		if ((time >= 5*3600) && (time < 8*3600+1800)) {
-			if (!stanice) {
+			if (stanice == 0) {
 				Activate(Time+Normal(92, 92));
-			} else {
+			} else if (stanice == 1) {
 				Activate(Time+Normal(116,116));
 			}
 		} else if ((time >= (8*3600+1800)) && (time < 22*3600)) {
-			if (!stanice) {
+			if (stanice == 0) {
 				Activate(Time+Normal(400, 400));
-			} else {
+			} else if(stanice == 1) {
 				Activate(Time+Normal(514, 514));
 			}
 		} else {
-
+			// wtf v noci nechodi s nejakym timem?
 		}
 	}
 
@@ -78,6 +95,15 @@ public:
 };
 
 int main() {
+	Print("Model vlakove trasy Bucovice - Brno\n");
+	SetOutput("model.out");
+	RandomSeed(time(NULL));
 	Init(0,3600*24);
-
+	(new Generator(false))->Activate();
+	(new Generator(true))->Activate();
+	Run();
+	Table.Output();
+	cekaniBucovice.Output();
+	cekaniSlavkov.Output();
+	return 0;
 }
