@@ -47,10 +47,8 @@ public:
 
 		if (stanice == 0) {
 			Into(cekaniBucovice);
-			Wait(Exponential(10));
 		} else if (stanice == 1) {
 			Into(cekaniSlavkov);
-			Wait(Exponential(10));
 		}
 		Table(Time-Prichod);
 	}
@@ -75,22 +73,22 @@ public:
 		(new Cestujici(stanice))->Activate();
 		if ((time >= 5*3600) && (time < 8*3600+1800)) {
 			if (stanice == 0) {
-				Activate(Time+Normal(92, 92));
+				Activate(time+Exponential(92));
 			} else if (stanice == 1) {
-				Activate(Time+Normal(116,116));
+				Activate(time+Exponential(116));
 			}
 		} else if ((time >= (8*3600+1800)) && (time < 22*3600)) {
 			if (stanice == 0) {
-				Activate(Time+Normal(400, 400));
+				Activate(time+Exponential(400));
 			} else if(stanice == 1) {
-				Activate(Time+Normal(514, 514));
+				Activate(time+Exponential(514));
 			}
 		} else {
 			// wtf v noci nechodi s nejakym timem?
 		}
 	}
 
-	bool stanice;
+	int stanice;
 
 };
 
@@ -99,8 +97,10 @@ int main() {
 	SetOutput("model.out");
 	RandomSeed(time(NULL));
 	Init(0,3600*24);
-	(new Generator(false))->Activate();
-	(new Generator(true))->Activate();
+	(new Generator(0))->Activate();
+	(new Generator(1))->Activate();
+	(new Generator(0))->Activate();
+	(new Generator(1))->Activate();
 	Run();
 	Table.Output();
 	cekaniBucovice.Output();
