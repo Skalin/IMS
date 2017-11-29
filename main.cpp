@@ -15,26 +15,28 @@ const double Noc = 420.0; // doba trvani noci v minutach(zadne vlaky nejezdi)
 const double SpickaIntervalVlaku = 60.0; // interval mezi vlaky ve spicce
 const double NespickaIntervalVlaku = 120.0; // interval mezi vlaky mimo spickuS
 
+const double pocetLidiVeSpicce = 0.54; // procent lidi ve spicce
 const double VlakyVeSpicce = Spicka/SpickaIntervalVlaku;
 const double VlakyMimoSpicku = Nespicka/NespickaIntervalVlaku;
 
 const int CestujiciVeseli = 550;
 const int CestujiciBucovice = 250;
 const int CestujiciSlavkov = 200;
+int aktualniStanice = -1;
 
 int spickaPrijezdyBucovice[] = {5*3600, 6*3600, 7*3600, 8*3600};
-int spickaPrijezdySlavkov[] = {5*3600+600, 6*3600+600, 7*3600+600, 8*3600+600};
+int spickaPrijezdySlavkov[] = {5*3600+(int)TrasaA*60, 6*3600+(int)TrasaA*60, 7*3600+(int)TrasaA*60, 8*3600+(int)TrasaA*60};
 int nespickaPrijezdyBucovice[] = {10*3600, 12*3600, 14*3600, 16*3600, 18*3600, 20*3600, 22*3600};
-int nespickaPrijezdySlavkov[] = {10*3600+600, 12*3600+600, 14*3600+600, 16*3600+600, 18*3600+600, 20*3600+600, 22*3600+600};
+int nespickaPrijezdySlavkov[] = {10*3600+(int)TrasaA*60, 12*3600+(int)TrasaA*60, 14*3600+(int)TrasaA*60, 16*3600+(int)TrasaA*60, 18*3600+(int)TrasaA*60, 20*3600+(int)TrasaA*60, 22*3600+(int)TrasaA*60};
 
-const int PocetStanic = 2;
+const int PocetStanic = 3;
 Queue cekaniBucovice("Cekani ve stanici Bucovice");
 Queue cekaniSlavkov("Cekani ve stanici Slavkov");
 
 Facility Stanice[PocetStanic];
-Store Vlak("Vlak", 100);
 
 Histogram Table("Table", 0,25,20);
+Store Vlak("Vlak", 100);
 
 int TimeOfDay(){
 	int time = ((int) Time % 86400);
@@ -65,6 +67,41 @@ int castDne(int time) {
 	}
 }
 
+
+class VeseliBucovice : public Event {
+
+	void Behavior() {
+		double Prijezd = Time;
+
+		Table(Time-Prijezd);
+	}
+};
+
+class BucoviceSlavkov : public Event {
+
+	void Behaviour() {
+		double Prijezd = Time;
+		//int time = TimeOfDay();
+
+		Table(Time-Prijezd);
+	}
+
+};
+
+
+
+class SlavkovBrno : public Event {
+
+	void Behaviour() {
+		double Prijezd = Time;
+		//int time = TimeOfDay();
+
+		Table(Time-Prijezd);
+	}
+
+};
+
+
 class Cestujici : public Process {
 public:
 	Cestujici(int Stanice) : Process() {
@@ -79,68 +116,68 @@ public:
 
 			if (stanice == 0) {
 				if (time == dalsiVlak(time, spickaPrijezdyBucovice)) {
-					if (!Vlak.Full()) {
+					if (Vlak.Free()) {
 						Enter(Vlak);
 					} else {
 						Into(cekaniBucovice);
 						Passivate();
-						WaitUntil(castDne(time) == 1 && time <= dalsiVlak(time, spickaPrijezdyBucovice) && !Vlak.Full());
+						WaitUntil(castDne(time) == 1 && time == dalsiVlak(time, spickaPrijezdyBucovice) && Vlak.Free());
 						Enter(Vlak);
 					}
 				} else {
 					Into(cekaniBucovice);
 					Passivate();
-					WaitUntil(castDne(time) == 1 && time <= dalsiVlak(time, spickaPrijezdyBucovice) && !Vlak.Full());
+					WaitUntil(castDne(time) == 1 && time == dalsiVlak(time, spickaPrijezdyBucovice) && Vlak.Free());
 					Enter(Vlak);
 				}
 			} else if (stanice == 1) {
 				if (time == dalsiVlak(time, spickaPrijezdySlavkov)) {
-					if (!Vlak.Full()) {
+					if (Vlak.Free()) {
 						Enter(Vlak);
 					} else {
 						Into(cekaniSlavkov);
 						Passivate();
-						WaitUntil(castDne(time) == 1 && time <= dalsiVlak(time, spickaPrijezdySlavkov) && !Vlak.Full());
+						WaitUntil(castDne(time) == 1 && time == dalsiVlak(time, spickaPrijezdySlavkov) && Vlak.Free());
 						Enter(Vlak);
 					}
 				} else {
 					Into(cekaniSlavkov);
 					Passivate();
-					WaitUntil(castDne(time) == 1 && time <= dalsiVlak(time, spickaPrijezdySlavkov) && !Vlak.Full());
+					WaitUntil(castDne(time) == 1 && time == dalsiVlak(time, spickaPrijezdySlavkov) && Vlak.Free());
 					Enter(Vlak);
 				}
 			}
 		} else if (castDne(time) == 2) {
 			if (stanice == 0) {
 				if (time == dalsiVlak(time, nespickaPrijezdyBucovice)) {
-					if (!Vlak.Full()) {
+					if (Vlak.Free()) {
 						Enter(Vlak);
 					} else {
 						Into(cekaniBucovice);
 						Passivate();
-						WaitUntil(castDne(time) == 2 && time <= dalsiVlak(time, nespickaPrijezdyBucovice) && !Vlak.Full());
+						WaitUntil(castDne(time) == 2 && time == dalsiVlak(time, nespickaPrijezdyBucovice) && Vlak.Free());
 						Enter(Vlak);
 					}
 				} else {
 					Into(cekaniBucovice);
 					Passivate();
-					WaitUntil(castDne(time) == 2 && time <= dalsiVlak(time, nespickaPrijezdyBucovice) && !Vlak.Full());
+					WaitUntil(castDne(time) == 2 && time == dalsiVlak(time, nespickaPrijezdyBucovice) && Vlak.Free());
 					Enter(Vlak);
 				}
 			} else if (stanice == 1) {
 				if (time == dalsiVlak(time, nespickaPrijezdySlavkov)) {
-					if (!Vlak.Full()) {
+					if (Vlak.Free()) {
 						Enter(Vlak);
 					} else {
 						Into(cekaniSlavkov);
 						Passivate();
-						WaitUntil(castDne(time) == 2 && time <= dalsiVlak(time, nespickaPrijezdySlavkov) && !Vlak.Full());
+						WaitUntil(castDne(time) == 2 && time == dalsiVlak(time, nespickaPrijezdySlavkov) && Vlak.Free());
 						Enter(Vlak);
 					}
 				} else {
 					Into(cekaniSlavkov);
 					Passivate();
-					WaitUntil(castDne(time) == 2 && time <= dalsiVlak(time, nespickaPrijezdySlavkov) && !Vlak.Full());
+					WaitUntil(castDne(time) == 2 && time == dalsiVlak(time, nespickaPrijezdySlavkov) && Vlak.Free());
 					Enter(Vlak);
 				}
 			}
@@ -160,11 +197,6 @@ public:
 };
 
 
-class Vlak : public Process {
-
-};
-
-
 class Generator : public Event {
 public:
 	Generator(int Stanice) : Event() {
@@ -173,17 +205,17 @@ public:
 
 	void Behavior() {
 		int time = TimeOfDay();
-		if ((time >= 5*3600) && (time < 8*3600+1800)) {
+		if (castDne(time) == 1) {
 			if (stanice == 0) {
-				Activate(Time+Normal(92, 7));
+				Activate(Time+Exponential((int)SpickaIntervalVlaku/CestujiciBucovice*pocetLidiVeSpicce/Spicka));
 			} else if (stanice == 1) {
-				Activate(Time+Normal(116, 9));
+				Activate(Time+Exponential((int)SpickaIntervalVlaku/CestujiciSlavkov*pocetLidiVeSpicce/Spicka));
 			}
-		} else if ((time >= (8*3600+1800)) && (time < 22*3600)) {
+		} else if (castDne(time) == 2) {
 			if (stanice == 0) {
-				Activate(Time+Normal(400, 18));
+				Activate(Time+Exponential((int)NespickaIntervalVlaku/CestujiciBucovice*(1.00-pocetLidiVeSpicce)/Nespicka));
 			} else if(stanice == 1) {
-				Activate(Time+Normal(514, 20));
+				Activate(Time+Exponential((int)NespickaIntervalVlaku/CestujiciSlavkov*(1.00-pocetLidiVeSpicce)/Nespicka));
 			}
 		} else {
 			Activate(Time+Normal(3600, 55));
@@ -207,6 +239,10 @@ int main() {
 	Table.Output();
 	cekaniBucovice.Output();
 	cekaniSlavkov.Output();
+	Vlak.Output();
+	Stanice[2].Output();
+	Stanice[1].Output();
+	Stanice[0].Output();
 
 	return 0;
 }
