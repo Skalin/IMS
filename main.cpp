@@ -22,10 +22,10 @@ const double VlakyMimoSpicku = Nespicka/NespickaIntervalVlaku;
 const int CestujiciVeseli = 550;
 const int CestujiciBucovice = 250;
 const int CestujiciSlavkov = 200;
-int aktualniStanice = -1;
 
 int spickaPrijezdyBucovice[] = {5*3600, 6*3600, 7*3600, 8*3600};
-int nespickaPrijezdyBucovice[] = {10*3600, 12*3600, 14*3600, 16*3600, 18*3600, 20*3600, 22*3600};
+
+Store Vagony("Vlak", 100);
 
 const int PocetStanic = 3;
 Queue cekaniBucovice("Cekani ve stanici Bucovice");
@@ -68,15 +68,21 @@ class Vlak : public Process, public Store {
 
 	void Behavior() {
 		double Prijezd = Time;
-		int time = TimeOfDay();
-		if (castDne(time) == 1) {
-			Seize(Stanice[0]);
-			Wait(Time+TrasaA*60);
-		} else if (castDne(time) == 2) {
 
-		} else {
+		Seize(Stanice[0]);
+		Wait(Time+cekaniBucovice.Length()*4);
+		Release(Stanice[0]);
+		Wait(Time+TrasaA*60);
 
-		}
+		Seize(Stanice[1]);
+		Wait(Time+cekaniSlavkov.Length()*4);
+		Release(Stanice[1]);
+		Wait(Time+TrasaB*60);
+
+		Seize(Stanice[2]);
+		Wait(Time+Vagony.Used()*4);
+		Release(Stanice[2]);
+
 
 		Table(Time-Prijezd);
 	}
@@ -92,21 +98,26 @@ public:
 
 	void Behavior() {
 		double Prichod = Time;
-		int time = TimeOfDay();
 
-		if (castDne(time) == 1) {
-			if (stanice == 0) {}
-		} else if (castDne(time) == 2) {
 
+		if (Stanice[stanice].Busy() && !Vagony.Full()) { // pokud je stanice busy, vlak je ve stanici
+			Enter(Vagony);
 		} else {
-			Activate(Time+Exponential(7200));
-			if (stanice == 0) {
+			if (stanice == 0)
 				Into(cekaniBucovice);
-			} else if (stanice == 1) {
+			else if (stanice == 1)
 				Into(cekaniSlavkov);
-			}
 			Passivate();
+			WaitUntil(Stanice[stanice].Busy() && !Vagony.Full());
+			Enter(Vagony);
 		}
+		// cestujici musi s urcitou pravdepodobnosti do vlaku nastoupit a vystoupit (0.1 pravdepodobnost)
+		double vystup = Random();
+
+		if (vystup <= 0.1) {
+			Leave(Vagony);
+		} // jinak zustane ve vlaku
+
 		Table(Time-Prichod);
 	}
 
@@ -152,11 +163,12 @@ class GeneratorVlak : public Event {
 
 		int time = TimeOfDay();
 		if (castDne(time) == 1 || castDne(time) == 2) {
-			(new Vlak())->Activate();
 
 			if (castDne(time) == 1) {
+				(new Vlak())->Activate();
 				Activate(Time+SpickaIntervalVlaku*60);
 			} else if (castDne(time == 2)) {
+				(new Vlak())->Activate();
 				Activate(Time+NespickaIntervalVlaku*60);
 			} else {
 				Activate(Time+Noc*60);
@@ -178,6 +190,7 @@ int main() {
 	Table.Output();
 	cekaniBucovice.Output();
 	cekaniSlavkov.Output();
+	Vagony.Output();
 
 	return 0;
 }
