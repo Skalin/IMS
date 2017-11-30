@@ -6,8 +6,9 @@
 
 
 
-const double TrasaA = 10.0; // doba cesty na trase Bucovice - Slavkov
-const double TrasaB = 25.0; // doba cesty na trase Slavkov - Brno
+const double TrasaA = 1.0; // doba cesty na trase Veseli - Bucovice
+const double TrasaB = 10.0; // doba cesty na trase Bucovice - Slavkov
+const double TrasaC = 25.0; // doba cesty na trase Slavkov - Brno
 const double Spicka = 180.5; // doba trvani spicky v minutach
 const double Nespicka = 780.5; // doba trvani nespicky v minutach(cas mezi spickou a noci)
 const double Noc = 420.0; // doba trvani noci v minutach(zadne vlaky nejezdi)
@@ -27,7 +28,7 @@ int spickaPrijezdyBucovice[] = {5*3600, 6*3600, 7*3600, 8*3600};
 
 Store Vagony("Vlak", 100);
 
-const int PocetStanic = 3;
+const int PocetStanic = 4;
 Queue cekaniBucovice("Cekani ve stanici Bucovice");
 Queue cekaniSlavkov("Cekani ve stanici Slavkov");
 
@@ -74,19 +75,25 @@ class Vlak : public Process, public Store {
 			(new Cestujici(0))->Activate;
 		}
 
+		
 		Seize(Stanice[0]);
-		Wait(Time+cekaniBucovice.Length()*4);
+		Wait(Time+TrasaA);
+		Wait(Time+pocetCestujicichZVeseli*4);
 		Release(Stanice[0]);
+		
+		
+		Wait(Time+cekaniBucovice.Length()*4);
+		Release(Stanice[1]);
 		Wait(Time+TrasaA*60);
 
-		Seize(Stanice[1]);
+		Seize(Stanice[2]);
 		Wait(Time+cekaniSlavkov.Length()*4);
-		Release(Stanice[1]);
+		Release(Stanice[2]);
 		Wait(Time+TrasaB*60);
 
-		Seize(Stanice[2]);
+		Seize(Stanice[3]);
 		Wait(Time+Vagony.Used()*4);
-		Release(Stanice[2]);
+		Release(Stanice[3]);
 
 
 		Table(Time-Prijezd);
@@ -176,14 +183,18 @@ public:
 		int time = TimeOfDay();
 		if (castDne(time) == 1) {
 			if (stanice == 0) {
-			 	Activate(Time+Exponential((int) SpickaIntervalVlaku/((CestujiciBucovice*pocetLidiVeSpicce)/Spicka)));
+			
 			} else if (stanice == 1) {
+			 	Activate(Time+Exponential((int) SpickaIntervalVlaku/((CestujiciBucovice*pocetLidiVeSpicce)/Spicka)));
+			} else if (stanice == 2) {
 				Activate(Time+Exponential((int) SpickaIntervalVlaku/((CestujiciSlavkov*pocetLidiVeSpicce)/Spicka)));
 			}
 		} else if (castDne(time) == 2) {
 			if (stanice == 0) {
+				Activate(Time+Exponential((int) NespickaIntervalVlaku));
+			} else if (stanice == 1) {
 				Activate(Time+Exponential((int) NespickaIntervalVlaku/((CestujiciBucovice*(1.00-pocetLidiVeSpicce))/Nespicka)));
-			} else if(stanice == 1) {
+			} else if(stanice == 2) {
 				Activate(Time+Exponential((int) NespickaIntervalVlaku/((CestujiciSlavkov*(1.00-pocetLidiVeSpicce))/Nespicka)));
 			}
 		} else {
