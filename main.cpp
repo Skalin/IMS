@@ -69,6 +69,11 @@ class Vlak : public Process, public Store {
 	void Behavior() {
 		double Prijezd = Time;
 
+		int pocetCestujicichZVeseli = Uniform(22,0.02);
+		for(int i =0; i < pocetCestujicichZVeseli; i++) {
+			(new Cestujici(0))->Activate;
+		}
+
 		Seize(Stanice[0]);
 		Wait(Time+cekaniBucovice.Length()*4);
 		Release(Stanice[0]);
@@ -99,8 +104,35 @@ public:
 	void Behavior() {
 		double Prichod = Time;
 
+		if (stanice == 0) {
+			if (Stanice[0].Busy()) {
+				Enter(Vagony);
+			}
+		} else {
+			if (Stanice[stanice].Busy() && !Vagony.Full()) {
+				Enter(Vagony);
+			} else if (stanice > 0 && stanice < 3) {
+				if (stanice == 1) {
+					Into(cekaniBucovice);
+					Passivate();
+				}
+				else if (stanice == 2) {
+					Into(cekaniSlavkov);
+					Passivate();
+				}
+				WaitUntil(Stanice[stanice].Busy() && !Vagony.Full());
+			} else { // ve stanici Brno vsichni vystoupi
+				while(!Vagony.Empty()) {
+					Leave(Vagony);
+				}
+			}
+		}
 
-		if (Stanice[stanice].Busy() && !Vagony.Full()) { // pokud je stanice busy, vlak je ve stanici
+
+
+		if (Stanice[0].Busy()) {
+			Enter(Vagony);
+		} else if (Stanice[stanice].Busy() && !Vagony.Full()) { // pokud je stanice busy, vlak je ve stanici
 			Enter(Vagony);
 		} else {
 			if (stanice == 0)
@@ -118,6 +150,15 @@ public:
 			Leave(Vagony);
 		} // jinak zustane ve vlaku
 
+
+		/*
+		 * pokud je vystup mensi nez 0.1
+		 */
+
+
+		if (Stanice[2].Busy()) {
+			Leave(Vagony);
+		}
 		Table(Time-Prichod);
 	}
 
