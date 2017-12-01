@@ -67,18 +67,19 @@ int castDne(int time) {
 
 class Vlak : public Process, public Store {
 
+
+
 	void Behavior() {
 		double Prijezd = Time;
 
 		int pocetCestujicichZVeseli = Uniform(22,0.02);
 		for(int i =0; i < pocetCestujicichZVeseli; i++) {
-			(new Cestujici(0))->Activate;
+			(new Cestujici(0))->Activate();
 		}
-
 		
 		Seize(Stanice[0]);
 		Wait(Time+TrasaA);
-		Wait(Time+pocetCestujicichZVeseli*4);
+		//Wait(Time+pocetCestujicichZVeseli*4);
 		Release(Stanice[0]);
 		
 		
@@ -101,7 +102,6 @@ class Vlak : public Process, public Store {
 };
 
 
-
 class Cestujici : public Process {
 public:
 	Cestujici(int Stanice) : Process() {
@@ -111,9 +111,19 @@ public:
 	void Behavior() {
 		double Prichod = Time;
 
+		// cestujici musi s urcitou pravdepodobnosti do vlaku nastoupit a vystoupit (0.1 pravdepodobnost)
+		double vystup = Random();
+
+		if (stanice != 0 && !Vagony.Empty() && vystup <= 0.1) {
+			Leave(Vagony);
+		} // jinak zustane ve vlaku
+
+
+
 		if (stanice == 0) {
 			if (Stanice[0].Busy()) {
 				Enter(Vagony);
+				Passivate();
 			}
 		} else {
 			if (Stanice[stanice].Busy() && !Vagony.Full()) {
@@ -129,13 +139,13 @@ public:
 				}
 				WaitUntil(Stanice[stanice].Busy() && !Vagony.Full());
 			} else { // ve stanici Brno vsichni vystoupi
-				while(!Vagony.Empty()) {
+				while (!Vagony.Empty()) {
 					Leave(Vagony);
 				}
 			}
 		}
 
-
+/*
 
 		if (Stanice[0].Busy()) {
 			Enter(Vagony);
@@ -150,17 +160,7 @@ public:
 			WaitUntil(Stanice[stanice].Busy() && !Vagony.Full());
 			Enter(Vagony);
 		}
-		// cestujici musi s urcitou pravdepodobnosti do vlaku nastoupit a vystoupit (0.1 pravdepodobnost)
-		double vystup = Random();
-
-		if (vystup <= 0.1) {
-			Leave(Vagony);
-		} // jinak zustane ve vlaku
-
-
-		/*
-		 * pokud je vystup mensi nez 0.1
-		 */
+*/
 
 
 		if (Stanice[2].Busy()) {
@@ -183,7 +183,7 @@ public:
 		int time = TimeOfDay();
 		if (castDne(time) == 1) {
 			if (stanice == 0) {
-			
+				Activate(Time+Exponential((int) NespickaIntervalVlaku));
 			} else if (stanice == 1) {
 			 	Activate(Time+Exponential((int) SpickaIntervalVlaku/((CestujiciBucovice*pocetLidiVeSpicce)/Spicka)));
 			} else if (stanice == 2) {
@@ -235,8 +235,8 @@ int main() {
 	SetOutput("model.out");
 	RandomSeed(time(NULL));
 	Init(0,86400);
-	(new GeneratorCestujici(0))->Activate();
 	(new GeneratorCestujici(1))->Activate();
+	(new GeneratorCestujici(2))->Activate();
 	(new GeneratorVlak())->Activate();
 	Run();
 	Table.Output();
