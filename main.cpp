@@ -79,6 +79,7 @@ public:
 
 	void Behavior() {
 		double Prichod = Time;
+		inTrain = false;
 
 		// cestujici musi s urcitou pravdepodobnosti do vlaku nastoupit a vystoupit (0.1 pravdepodobnost)
 		double vystup = Random();
