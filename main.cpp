@@ -29,13 +29,11 @@ int spickaPrijezdyBucovice[] = {5*3600, 6*3600, 7*3600, 8*3600};
 Store Vagony("Vlak", 100);
 
 const int PocetStanic = 4;
-Queue cekaniVeseli("Cekani ve stanici Veseli");
-Queue cekaniBucovice("Cekani ve stanici Bucovice");
-Queue cekaniSlavkov("Cekani ve stanici Slavkov");
+Queue cekarna[3];
 
 Facility Stanice[PocetStanic];
 
-Histogram Table("Table", 0,25,20);
+Histogram Table("Table", 0, 600,20);
 int TimeOfDay(){
 	int time = ((int) Time % 86400);
 	return time;
@@ -86,21 +84,9 @@ enterTrain:
 			Table(Time-Prichod);
 		} else {
 			if (!Stanice[stanice].Busy() || !Vagony.Full()) {
-				if (stanice == 0) {
-					Into(cekaniVeseli);
-				} else if (stanice == 1) {
-					Into(cekaniBucovice);
-				} else {
-					Into(cekaniSlavkov);
-				}
+				Into(cekarna[stanice]);
 				WaitUntil(Stanice[stanice].Busy() && !Vagony.Full());
-				if (stanice == 0) {
-					cekaniVeseli.GetFirst();
-				} else if (stanice == 1) {
-					cekaniBucovice.GetFirst();
-				} else {
-					cekaniSlavkov.GetFirst();
-				}
+				cekarna[stanice].GetFirst();
 				goto enterTrain;
 			}
 		}
@@ -131,18 +117,18 @@ class Vlak : public Process {
 	void Behavior() {
 		//double Prijezd = Time;
 		Seize(Stanice[0]);
-		Wait(Time+(Vagony.Free() > cekaniVeseli.Length() ? cekaniVeseli.Length() : Vagony.Free())*2);
+		Wait(Time+(Vagony.Free() > cekarna[0].Length() ? cekarna[0].Length() : Vagony.Free())*2);
 		Release(Stanice[0]);
 		Wait(Time+TrasaA*60);
 
 
 		Seize(Stanice[1]);
-		Wait(Time+(Vagony.Free() > cekaniBucovice.Length() ? cekaniBucovice.Length() : Vagony.Free())*2);
+		Wait(Time+(Vagony.Free() > cekarna[1].Length() ? cekarna[1].Length() : Vagony.Free())*2);
 		Release(Stanice[1]);
 		Wait(Time+TrasaB*60);
 
 		Seize(Stanice[2]);
-		Wait(Time+(Vagony.Free() > cekaniSlavkov.Length() ? cekaniSlavkov.Length() : Vagony.Free())*2);
+		Wait(Time+(Vagony.Free() > cekarna[2].Length() ? cekarna[2].Length() : Vagony.Free())*2);
 		Release(Stanice[2]);
 		Wait(Time+TrasaC*60);
 
@@ -158,7 +144,7 @@ class Vlak : public Process {
 class GeneratorCestujici : public Event {
 public:
 	GeneratorCestujici(int Stanice) : Event() {
-		stanice = Stanice; // stanice 0 je Bucovice, stanice 1 je Slavkov, 2 je Brno (negenerujeme nic)
+		stanice = Stanice; // stanice 0 je Veseli, stanice 1 je Bucovice, 2 je Slavkov (negenerujeme nic)
 	}
 
 	void Behavior() {
@@ -222,9 +208,9 @@ int main() {
 	(new GeneratorCestujici(2))->Activate();
 	Run();
 	Table.Output();
-	cekaniVeseli.Output();
-	cekaniBucovice.Output();
-	cekaniSlavkov.Output();
+	cekarna[0].Output();
+	cekarna[1].Output();
+	cekarna[2].Output();
 	Vagony.Output();
 
 	return 0;
