@@ -173,7 +173,7 @@ enterTrain:
 
 
 
-class Vlak : public Process, public Store {
+class Vlak : public Process {
 
 	void Behavior() {
 		double Prijezd = Time;
