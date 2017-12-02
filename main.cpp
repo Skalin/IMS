@@ -29,6 +29,7 @@ int spickaPrijezdyBucovice[] = {5*3600, 6*3600, 7*3600, 8*3600};
 Store Vagony("Vlak", 100);
 
 const int PocetStanic = 4;
+Queue cekaniVeseli("Cekani ve stanici Veseli");
 Queue cekaniBucovice("Cekani ve stanici Bucovice");
 Queue cekaniSlavkov("Cekani ve stanici Slavkov");
 
@@ -65,42 +66,6 @@ int castDne(int time) {
 }
 
 
-class Vlak : public Process, public Store {
-
-
-
-	void Behavior() {
-		double Prijezd = Time;
-
-		int pocetCestujicichZVeseli = Uniform(22,0.02);
-		for(int i =0; i < pocetCestujicichZVeseli; i++) {
-			(new Cestujici(0))->Activate();
-		}
-		
-		Seize(Stanice[0]);
-		Wait(Time+TrasaA);
-		//Wait(Time+pocetCestujicichZVeseli*4);
-		Release(Stanice[0]);
-		
-		
-		Wait(Time+cekaniBucovice.Length()*4);
-		Release(Stanice[1]);
-		Wait(Time+TrasaA*60);
-
-		Seize(Stanice[2]);
-		Wait(Time+cekaniSlavkov.Length()*4);
-		Release(Stanice[2]);
-		Wait(Time+TrasaB*60);
-
-		Seize(Stanice[3]);
-		Wait(Time+Vagony.Used()*4);
-		Release(Stanice[3]);
-
-
-		Table(Time-Prijezd);
-	}
-};
-
 
 class Cestujici : public Process {
 public:
@@ -108,26 +73,57 @@ public:
 		stanice = Stanice;
 	}
 
+	bool isInTrain() {
+		return inTrain;
+	}
+
 	void Behavior() {
 		double Prichod = Time;
 
 		// cestujici musi s urcitou pravdepodobnosti do vlaku nastoupit a vystoupit (0.1 pravdepodobnost)
 		double vystup = Random();
-
-		if (stanice != 0 && !Vagony.Empty() && vystup <= 0.1) {
+		if (isInTrain() && vystup <= 0.1) {
 			Leave(Vagony);
-		} // jinak zustane ve vlaku
+			inTrain = false;
+		} // jinak zustane ve vlaku a nebo do vlaku teprve nastoupi
 
 
+enterTrain:
+		if (Stanice[stanice].Busy() && !isInTrain() && !Vagony.Full()) {
+			Enter(Vagony);
+			inTrain = true;
+		} else {
+			if (!Stanice[stanice].Busy() || !Vagony.Full()) {
+				if (stanice == 0) {
+					Into(cekaniVeseli);
+				} else if (stanice == 1) {
+					Into(cekaniBucovice);
+				} else {
+					Into(cekaniSlavkov);
+				}
+				Passivate();
+				goto enterTrain;
+			}
+		}
 
+		for (int i = stanice; i < PocetStanic; i++) {
+
+		}
+/*
 		if (stanice == 0) {
 			if (Stanice[0].Busy()) {
 				Enter(Vagony);
+				inTrain = true;
+				Passivate();
+			} else {
+				Into(cekaniVeseli);
 				Passivate();
 			}
 		} else {
 			if (Stanice[stanice].Busy() && !Vagony.Full()) {
 				Enter(Vagony);
+				inTrain = true;
+				Passivate();
 			} else if (stanice > 0 && stanice < 3) {
 				if (stanice == 1) {
 					Into(cekaniBucovice);
@@ -141,11 +137,12 @@ public:
 			} else { // ve stanici Brno vsichni vystoupi
 				while (!Vagony.Empty()) {
 					Leave(Vagony);
+					inTrain = false;
 				}
 			}
 		}
 
-/*
+
 
 		if (Stanice[0].Busy()) {
 			Enter(Vagony);
@@ -169,9 +166,39 @@ public:
 		Table(Time-Prichod);
 	}
 
+	bool inTrain;
 	int stanice;
 };
 
+
+
+class Vlak : public Process, public Store {
+
+	void Behavior() {
+		double Prijezd = Time;
+		Seize(Stanice[0]);
+		Wait(Time+TrasaA);
+		Wait(Time+(Vagony.Free() > cekaniVeseli.Length() ? cekaniVeseli.Length() : Vagony.Free())*4);
+		Release(Stanice[0]);
+
+
+		Wait(Time+(Vagony.Free() > cekaniBucovice.Length() ? cekaniBucovice.Length() : Vagony.Free())*4);
+		Release(Stanice[1]);
+		Wait(Time+TrasaA*60);
+
+		Seize(Stanice[2]);
+		Wait(Time+(Vagony.Free() > cekaniSlavkov.Length() ? cekaniSlavkov.Length() : Vagony.Free())*4);
+		Release(Stanice[2]);
+		Wait(Time+TrasaB*60);
+
+		Seize(Stanice[3]);
+		Wait(Time+Vagony.Used()*4);
+		Release(Stanice[3]);
+
+
+		Table(Time-Prijezd);
+	}
+};
 
 class GeneratorCestujici : public Event {
 public:
@@ -180,10 +207,11 @@ public:
 	}
 
 	void Behavior() {
+		double Prijezd = Time;
 		int time = TimeOfDay();
 		if (castDne(time) == 1) {
 			if (stanice == 0) {
-				Activate(Time+Exponential((int) NespickaIntervalVlaku));
+				Activate(Time+Exponential((int) SpickaIntervalVlaku/((CestujiciVeseli*pocetLidiVeSpicce)/Spicka)));
 			} else if (stanice == 1) {
 			 	Activate(Time+Exponential((int) SpickaIntervalVlaku/((CestujiciBucovice*pocetLidiVeSpicce)/Spicka)));
 			} else if (stanice == 2) {
@@ -191,7 +219,7 @@ public:
 			}
 		} else if (castDne(time) == 2) {
 			if (stanice == 0) {
-				Activate(Time+Exponential((int) NespickaIntervalVlaku));
+				Activate(Time+Exponential((int) NespickaIntervalVlaku/((CestujiciVeseli*(1.00-pocetLidiVeSpicce))/Nespicka)));
 			} else if (stanice == 1) {
 				Activate(Time+Exponential((int) NespickaIntervalVlaku/((CestujiciBucovice*(1.00-pocetLidiVeSpicce))/Nespicka)));
 			} else if(stanice == 2) {
@@ -202,6 +230,7 @@ public:
 		}
 
 		(new Cestujici(stanice))->Activate();
+		Table(Time-Prijezd);
 	}
 
 	int stanice;
@@ -213,20 +242,18 @@ public:
 class GeneratorVlak : public Event {
 	void Behavior() {
 
+		double Prijezd = Time;
 		int time = TimeOfDay();
-		if (castDne(time) == 1 || castDne(time) == 2) {
-
 			if (castDne(time) == 1) {
 				(new Vlak())->Activate();
-				Activate(Time+SpickaIntervalVlaku*60);
+				Activate(Time+(SpickaIntervalVlaku*60));
 			} else if (castDne(time == 2)) {
 				(new Vlak())->Activate();
-				Activate(Time+NespickaIntervalVlaku*60);
+				Activate(Time+(NespickaIntervalVlaku*60));
 			} else {
-				Activate(Time+Noc*60);
+			Activate(Time+Noc*60);
 			}
-
-		}
+		Table(Time-Prijezd);
 	}
 };
 
@@ -235,11 +262,13 @@ int main() {
 	SetOutput("model.out");
 	RandomSeed(time(NULL));
 	Init(0,86400);
+	(new GeneratorVlak())->Activate();
+	(new GeneratorCestujici(0))->Activate();
 	(new GeneratorCestujici(1))->Activate();
 	(new GeneratorCestujici(2))->Activate();
-	(new GeneratorVlak())->Activate();
 	Run();
 	Table.Output();
+	cekaniVeseli.Output();
 	cekaniBucovice.Output();
 	cekaniSlavkov.Output();
 	Vagony.Output();
