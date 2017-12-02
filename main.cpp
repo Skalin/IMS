@@ -211,6 +211,10 @@ int main() {
 	Run();
 	Table.Output();
 	Trains.Output();
+	Stanice[0].Output();
+	Stanice[1].Output();
+	Stanice[2].Output();
+	Stanice[3].Output();
 	cekarna[0].Output();
 	cekarna[1].Output();
 	cekarna[2].Output();
