@@ -51,9 +51,6 @@ int nejblizsiVlakVeSpicce(int time, int *array) {
 	return nearest;
 }
 
-int dalsiVlak(int time, int *array) {
-	return array[nejblizsiVlakVeSpicce(time, array)];
-}
 
 int castDne(int time) {
 	if ((time >= 5*3600) && (time < 8*3600+1800)) {
@@ -64,7 +61,6 @@ int castDne(int time) {
 		return 0;
 	}
 }
-
 
 
 class Cestujici : public Process {
@@ -78,7 +74,8 @@ public:
 	}
 
 	void Behavior() {
-		double Prichod = Time;
+		double Prichod;
+		Prichod = Time;
 		inTrain = false;
 
 
@@ -86,6 +83,7 @@ enterTrain:
 		if (Stanice[stanice].Busy() && !isInTrain() && !Vagony.Full()) {
 			Enter(Vagony);
 			inTrain = true;
+			Table(Time-Prichod);
 		} else {
 			if (!Stanice[stanice].Busy() || !Vagony.Full()) {
 				if (stanice == 0) {
@@ -95,7 +93,6 @@ enterTrain:
 				} else {
 					Into(cekaniSlavkov);
 				}
-				Passivate();
 				WaitUntil(Stanice[stanice].Busy() && !Vagony.Full());
 				if (stanice == 0) {
 					cekaniVeseli.GetFirst();
@@ -117,61 +114,10 @@ enterTrain:
 			}
 		}
 
-/*
-		if (stanice == 0) {
-			if (Stanice[0].Busy()) {
-				Enter(Vagony);
-				inTrain = true;
-				Passivate();
-			} else {
-				Into(cekaniVeseli);
-				Passivate();
-			}
-		} else {
-			if (Stanice[stanice].Busy() && !Vagony.Full()) {
-				Enter(Vagony);
-				inTrain = true;
-				Passivate();
-			} else if (stanice > 0 && stanice < 3) {
-				if (stanice == 1) {
-					Into(cekaniBucovice);
-					Passivate();
-				}
-				else if (stanice == 2) {
-					Into(cekaniSlavkov);
-					Passivate();
-				}
-				WaitUntil(Stanice[stanice].Busy() && !Vagony.Full());
-			} else { // ve stanici Brno vsichni vystoupi
-				while (!Vagony.Empty()) {
-					Leave(Vagony);
-					inTrain = false;
-				}
-			}
-		}
-
-
-
-		if (Stanice[0].Busy()) {
-			Enter(Vagony);
-		} else if (Stanice[stanice].Busy() && !Vagony.Full()) { // pokud je stanice busy, vlak je ve stanici
-			Enter(Vagony);
-		} else {
-			if (stanice == 0)
-				Into(cekaniBucovice);
-			else if (stanice == 1)
-				Into(cekaniSlavkov);
-			Passivate();
-			WaitUntil(Stanice[stanice].Busy() && !Vagony.Full());
-			Enter(Vagony);
-		}
-*/
-
 
 		if (Stanice[2].Busy()) {
 			Leave(Vagony);
 		}
-		Table(Time-Prichod);
 	}
 
 	bool inTrain;
