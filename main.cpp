@@ -102,6 +102,7 @@ enterTrain:
 					Into(cekaniSlavkov);
 				}
 				Passivate();
+				WaitUntil(Stanice[stanice].Busy() && !Vagony.Full());
 				goto enterTrain;
 			}
 		}
@@ -212,19 +213,19 @@ public:
 		int time = TimeOfDay();
 		if (castDne(time) == 1) {
 			if (stanice == 0) {
-				Activate(Time+Exponential((int) SpickaIntervalVlaku/((CestujiciVeseli*pocetLidiVeSpicce)/Spicka)));
+				Activate(Time+Exponential(SpickaIntervalVlaku/((CestujiciVeseli*pocetLidiVeSpicce)/Spicka)));
 			} else if (stanice == 1) {
-			 	Activate(Time+Exponential((int) SpickaIntervalVlaku/((CestujiciBucovice*pocetLidiVeSpicce)/Spicka)));
+			 	Activate(Time+Exponential(SpickaIntervalVlaku/((CestujiciBucovice*pocetLidiVeSpicce)/Spicka)));
 			} else if (stanice == 2) {
-				Activate(Time+Exponential((int) SpickaIntervalVlaku/((CestujiciSlavkov*pocetLidiVeSpicce)/Spicka)));
+				Activate(Time+Exponential(SpickaIntervalVlaku/((CestujiciSlavkov*pocetLidiVeSpicce)/Spicka)));
 			}
 		} else if (castDne(time) == 2) {
 			if (stanice == 0) {
-				Activate(Time+Exponential((int) NespickaIntervalVlaku/((CestujiciVeseli*(1.00-pocetLidiVeSpicce))/Nespicka)));
+				Activate(Time+Exponential(NespickaIntervalVlaku/((CestujiciVeseli*(1.00-pocetLidiVeSpicce))/Nespicka)));
 			} else if (stanice == 1) {
-				Activate(Time+Exponential((int) NespickaIntervalVlaku/((CestujiciBucovice*(1.00-pocetLidiVeSpicce))/Nespicka)));
+				Activate(Time+Exponential(NespickaIntervalVlaku/((CestujiciBucovice*(1.00-pocetLidiVeSpicce))/Nespicka)));
 			} else if(stanice == 2) {
-				Activate(Time+Exponential((int) NespickaIntervalVlaku/((CestujiciSlavkov*(1.00-pocetLidiVeSpicce))/Nespicka)));
+				Activate(Time+Exponential(NespickaIntervalVlaku/((CestujiciSlavkov*(1.00-pocetLidiVeSpicce))/Nespicka)));
 			}
 		} else {
 			Activate(Time+Normal(3600, 55));
