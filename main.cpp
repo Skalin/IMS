@@ -129,7 +129,7 @@ enterTrain:
 class Vlak : public Process {
 
 	void Behavior() {
-		double Prijezd = Time;
+		//double Prijezd = Time;
 		Seize(Stanice[0]);
 		Wait(Time+(Vagony.Free() > cekaniVeseli.Length() ? cekaniVeseli.Length() : Vagony.Free())*2);
 		Release(Stanice[0]);
@@ -151,7 +151,7 @@ class Vlak : public Process {
 		Release(Stanice[3]);
 
 
-		Table(Time-Prijezd);
+		//Table(Time-Prijezd);
 	}
 };
 
@@ -162,7 +162,7 @@ public:
 	}
 
 	void Behavior() {
-		double Prijezd = Time;
+		//double Prijezd = Time;
 		int time = TimeOfDay();
 		if (castDne(time) == 1) {
 			if (stanice == 0) {
@@ -185,7 +185,7 @@ public:
 		}
 
 		(new Cestujici(stanice))->Activate();
-		Table(Time-Prijezd);
+		//Table(Time-Prijezd);
 	}
 
 	int stanice;
@@ -197,7 +197,7 @@ public:
 class GeneratorVlak : public Event {
 	void Behavior() {
 
-		double Prijezd = Time;
+		//double Prijezd = Time;
 		int time = TimeOfDay();
 		(new Vlak())->Activate();
 			if (castDne(time) == 1) {
@@ -207,7 +207,7 @@ class GeneratorVlak : public Event {
 			} else {
 			Activate(Time+(Noc*60.0));
 			}
-		Table(Time-Prijezd);
+		//Table(Time-Prijezd);
 	}
 };
 
