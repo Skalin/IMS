@@ -33,7 +33,8 @@ Queue cekarna[3];
 
 Facility Stanice[PocetStanic];
 
-Histogram Table("Table", 0, 600,20);
+Histogram Table("Cestujici", 0, 600,20);
+Histogram Trains("Vlaky", 0, 1800,20);
 int TimeOfDay(){
 	int time = ((int) Time % 86400);
 	return time;
@@ -115,7 +116,11 @@ enterTrain:
 class Vlak : public Process {
 
 	void Behavior() {
-		//double Prijezd = Time;
+
+		double Prichod;
+		Prichod = Time;
+
+		Table(Time-Prichod);
 		Seize(Stanice[0]);
 		Wait(Time+(Vagony.Free() > cekarna[0].Length() ? cekarna[0].Length() : Vagony.Free())*2);
 		Release(Stanice[0]);
@@ -137,7 +142,6 @@ class Vlak : public Process {
 		Release(Stanice[3]);
 
 
-		//Table(Time-Prijezd);
 	}
 };
 
@@ -148,7 +152,6 @@ public:
 	}
 
 	void Behavior() {
-		//double Prijezd = Time;
 		int time = TimeOfDay();
 		if (castDne(time) == 1) {
 			if (stanice == 0) {
@@ -171,7 +174,6 @@ public:
 		}
 
 		(new Cestujici(stanice))->Activate();
-		//Table(Time-Prijezd);
 	}
 
 	int stanice;
@@ -208,6 +210,7 @@ int main() {
 	(new GeneratorCestujici(2))->Activate();
 	Run();
 	Table.Output();
+	Trains.Output();
 	cekarna[0].Output();
 	cekarna[1].Output();
 	cekarna[2].Output();
