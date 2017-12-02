@@ -182,6 +182,7 @@ class Vlak : public Process, public Store {
 		Release(Stanice[0]);
 
 
+		Seize(Stanice[1]);
 		Wait(Time+(Vagony.Free() > cekaniBucovice.Length() ? cekaniBucovice.Length() : Vagony.Free())*4);
 		Release(Stanice[1]);
 		Wait(Time+TrasaA*60);
@@ -244,14 +245,13 @@ class GeneratorVlak : public Event {
 
 		double Prijezd = Time;
 		int time = TimeOfDay();
+		(new Vlak())->Activate();
 			if (castDne(time) == 1) {
-				(new Vlak())->Activate();
-				Activate(Time+(SpickaIntervalVlaku*60));
+				Activate(Time+(SpickaIntervalVlaku*60.0));
 			} else if (castDne(time == 2)) {
-				(new Vlak())->Activate();
-				Activate(Time+(NespickaIntervalVlaku*60));
+				Activate(Time+(NespickaIntervalVlaku*60.0));
 			} else {
-			Activate(Time+Noc*60);
+			Activate(Time+(Noc*60.0));
 			}
 		Table(Time-Prijezd);
 	}
