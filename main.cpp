@@ -108,8 +108,8 @@ enterTrain:
 			}
 		}
 
-		for (int i = stanice; i < PocetStanic; i++) {
-			WaitUntil(inTrain && !Stanice[i+1].Busy());
+		for (int i = stanice+1; i < PocetStanic; i++) {
+			WaitUntil(inTrain && Stanice[i].Busy());
 			double vystup = Random();
 			if (isInTrain() && vystup <= 0.1) {
 				Leave(Vagony);
