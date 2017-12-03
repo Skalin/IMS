@@ -77,7 +77,6 @@ public:
 			if (volnychMist <= 0) {
 				Print("Pocet volnych mist: %d\n", this->store->Free());
 				Wait(2);
-				Print("Po cekani\n");
 
 			} else {
 				Wait(3);
