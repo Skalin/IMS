@@ -69,20 +69,8 @@ public:
 
 		aktualniCas = TimeOfDay();
 		Seize(Stanice[0]);
-
-		if (this->store->Free()) {
-
-			int volnychMist = (this->store->Free() - (unsigned int)cekarna[0].Length());
-			Print("Volnych mist: %d\n", volnychMist);
-			if (volnychMist <= 0) {
-				Print("Pocet volnych mist: %d\n", this->store->Free());
-				Wait(2);
-
-			} else {
-				Wait(3);
-			}
-			Print("Po cekani\n");
-		}
+		Wait(20); // zastaveni vlaku
+		Print("Waitin..\n");
 
 		//Wait(((this->store->Free() > cekarna[0].Length()) ? (cekarna[0].Length()*pocetVagonu/pocetVstupu) : (this->store->Free())*pocetVagonu/pocetVstupu));
 		Release(Stanice[0]);
@@ -94,6 +82,7 @@ public:
 		//Print("---------------------------------------\n");
 		aktualniCas = TimeOfDay();
 		Seize(Stanice[1]);
+		Wait(20); // zastaveni vlaku
 		//Wait((this->store->Free() > cekarna[1].Length() ? cekarna[1].Length() : this->store->Free())*pocetVagonu/pocetVstupu);
 		Release(Stanice[1]);
 		//Print("---------------------------------------\n");
@@ -103,6 +92,7 @@ public:
 		//Print("---------------------------------------\n");
 		aktualniCas = TimeOfDay();
 		Seize(Stanice[2]);
+		Wait(20); // zastaveni vlaku
 		//Wait((this->store->Free() > cekarna[2].Length() ? cekarna[2].Length() : this->store->Free())*pocetVagonu/pocetVstupu);
 		Release(Stanice[2]);
 		//Print("---------------------------------------\n");
@@ -112,6 +102,7 @@ public:
 
 		aktualniCas = TimeOfDay();
 		Seize(Stanice[3]);
+		Wait(20); // zastaveni vlaku
 
 		Release(Stanice[3]);
 	}
@@ -168,11 +159,11 @@ void Behavior() {
 		double Prichod;
 		Prichod = Time;
 		inTrain = false;
-		unsigned long nearest = (unsigned long) nejblizsiVlak(TimeOfDay());
 
 
 		Into(cekarna[stanice]);
 	enterTrain:
+		unsigned long nearest = (unsigned long) nejblizsiVlak(TimeOfDay());
 		if (Stanice[stanice].Busy() && !vlaky.at(nearest)->isFull()) {
 			cekarna[stanice].GetFirst();
 			Enter(*vlaky.at(nearest)->getStore());
