@@ -185,15 +185,15 @@ public:
 class GeneratorVlak : public Process {
 	void Behavior() {
 
-		int time = TimeOfDay();
 
 		std::cout << sizeof(prijezdy)/sizeof(prijezdy[0]) << std::endl;
 
 		int size = sizeof(prijezdy)/sizeof(prijezdy[0]);
 		for (int i = 0; i < size; i++) {
-			Print("Cyklic\n");
+prijezd:
+			int time = TimeOfDay();
+			Print("Cyklic: ");
 			std::cout << time << std::endl;
-			prijezd:
 			if (time == prijezdy[i]) {
 				if (castDne(time) == 1) {
 					(new Vlak())->Activate();
@@ -201,10 +201,10 @@ class GeneratorVlak : public Process {
 				} else if (castDne(time) == 2) {
 					(new Vlak())->Activate();
 				}
+				Print("Vygenerovany vlak\n");
 			} else {
-				Wait(3600);
+				Wait(prijezdy[i] - time);
 				goto prijezd;
-				Print("Else vetev\n");
 			}
 		}
 	}
