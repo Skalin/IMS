@@ -8,12 +8,11 @@
 
 
 
-const double TrasaA = 3600.0; // doba cesty na trase Veseli - Bucovice
-const double TrasaB = 10.0*60.0; // doba cesty na trase Bucovice - Slavkov
-const double TrasaC = 25.0*60.0; // doba cesty na trase Slavkov - Brno
-const double Spicka = 180.5; // doba trvani spicky v minutach
-const double Nespicka = 780.5; // doba trvani nespicky v minutach(cas mezi spickou a noci)
-const double Noc = 420.0; // doba trvani noci v minutach(zadne vlaky nejezdi)
+const double RouteA = 3600.0; // doba cesty na trase Veseli - Bucovice
+const double RouteB = 10.0*60.0; // doba cesty na trase Bucovice - Slavkov
+const double RouteC = 25.0*60.0; // doba cesty na trase Slavkov - Brno
+const double PeakTime = 180.5; // doba trvani spicky v minutach
+const double NonPeakTime = 780.5; // doba trvani nespicky v minutach(cas mezi spickou a noci)
 
 const double SpickaIntervalVlaku = 60; // interval mezi vlaky ve spicce
 const double NespickaIntervalVlaku = 120; // interval mezi vlaky mimo spickuS
@@ -23,18 +22,18 @@ const double pocetMistVeVagonu = 33.3;
 const int pocetVstupu = pocetVagonu*2;
 
 const double pocetLidiVeSpicce = 0.54; // procent lidi ve spicce
-const double VlakyVeSpicce = Spicka/SpickaIntervalVlaku;
-const double VlakyMimoSpicku = Nespicka/NespickaIntervalVlaku;
+const double VlakyVeSpicce = PeakTime/SpickaIntervalVlaku;
+const double VlakyMimoSpicku = NonPeakTime/NespickaIntervalVlaku;
 
 const int cestujici[3] = {550, 250, 200};
 
-int prijezdy[] = {5*3600, 6*3600, 7*3600, 8*3600, 10*3600, 12*3600, 14*3600, 16*3600, 18*3600, 20*3600, 22*3600};
+int arrivals[] = {5*3600, 6*3600, 7*3600, 8*3600, 10*3600, 12*3600, 14*3600, 16*3600, 18*3600, 20*3600, 22*3600};
 
 
-const int PocetStanic = 4;
+const int amountOfStations = 4;
 Queue cekarna[3];
 
-Facility Stanice[PocetStanic];
+Facility Stations[amountOfStations];
 
 Histogram Table("Cestujici", 0, 600,20);
 Histogram Trains("Vlaky", 0, 3600,20);
@@ -59,60 +58,60 @@ int castDne(int time) {
 class Vlak : public Process {
 public:
 	Vlak(int time) : Process() {
-		cas = time;
+		initDepartureTime = time;
 		store = new Store((unsigned int) (pocetVagonu*pocetMistVeVagonu));
-		aktualniCas = cas;
+		currentTime = initDepartureTime;
 	}
 
 
 	void Behavior() {
 
-		aktualniCas = TimeOfDay();
-		Seize(Stanice[0]);
+		this->currentTime = TimeOfDay();
+		Seize(Stations[0]);
 		Wait(20); // zastaveni vlaku
 		Print("Waitin..\n");
 
 		//Wait(((this->store->Free() > cekarna[0].Length()) ? (cekarna[0].Length()*pocetVagonu/pocetVstupu) : (this->store->Free())*pocetVagonu/pocetVstupu));
-		Release(Stanice[0]);
+		Release(Stations[0]);
 		//Print("---------------------------------------\n");
 		//Print("Vlak v %d jede do Bucovic, vyjizdi v %f\n", cas/3600, Time/3600);
-		Wait(TrasaA);
-		//Print("Vlak v %d | Trvani: %.0f (min) | Dojel v %.5f (hod) \n", cas/3600, TrasaA/60.0, (Time)/3600);
+		Wait(RouteA);
+		//Print("Vlak v %d | Trvani: %.0f (min) | Dojel v %.5f (hod) \n", cas/3600, RouteA/60.0, (Time)/3600);
 
 		//Print("---------------------------------------\n");
-		aktualniCas = TimeOfDay();
-		Seize(Stanice[1]);
+		this->currentTime = TimeOfDay();
+		Seize(Stations[1]);
 		Wait(20); // zastaveni vlaku
 		//Wait((this->store->Free() > cekarna[1].Length() ? cekarna[1].Length() : this->store->Free())*pocetVagonu/pocetVstupu);
-		Release(Stanice[1]);
+		Release(Stations[1]);
 		//Print("---------------------------------------\n");
 		//Print("Vlak v %d jede do Slavkova\n", cas/3600);
-		Wait(TrasaB);
-//		Print("Vlak v %d | Trvani: %.0f (min) | Dojel v %.2f (hod)\n", cas/3600, TrasaB/60.0, (Time)/3600);
+		Wait(RouteB);
+//		Print("Vlak v %d | Trvani: %.0f (min) | Dojel v %.2f (hod)\n", cas/3600, RouteB/60.0, (Time)/3600);
 		//Print("---------------------------------------\n");
-		aktualniCas = TimeOfDay();
-		Seize(Stanice[2]);
+		this->currentTime = TimeOfDay();
+		Seize(Stations[2]);
 		Wait(20); // zastaveni vlaku
 		//Wait((this->store->Free() > cekarna[2].Length() ? cekarna[2].Length() : this->store->Free())*pocetVagonu/pocetVstupu);
-		Release(Stanice[2]);
+		Release(Stations[2]);
 		//Print("---------------------------------------\n");
 		//Print("Vlak v %d jede do Brna\n", cas/3600);
-		Wait(TrasaC);
-		//Print("Vlak v %d | Trvani: %.0f (min)| Dojel v %.2f (hod)\n", cas/3600, TrasaC/60.0, (Time)/3600);
+		Wait(RouteC);
+		//Print("Vlak v %d | Trvani: %.0f (min)| Dojel v %.2f (hod)\n", cas/3600, RouteC/60.0, (Time)/3600);
 
-		aktualniCas = TimeOfDay();
-		Seize(Stanice[3]);
+		this->currentTime = TimeOfDay();
+		Seize(Stations[3]);
 		Wait(20); // zastaveni vlaku
 
-		Release(Stanice[3]);
+		Release(Stations[3]);
 	}
 
-	int getCas() const {
-		return cas;
+	int getInitDepartureTime() const {
+		return initDepartureTime;
 	}
 
-	int getAktualniCas() const {
-		return aktualniCas;
+	double getCurrentTime() const {
+		return currentTime;
 	}
 
 	Store *getStore() const {
@@ -122,9 +121,9 @@ public:
 		return this->store->Full();
 	}
 private:
-	int cas;
+	int initDepartureTime;
 	Store *store;
-	int aktualniCas;
+	double currentTime;
 };
 
 
@@ -134,7 +133,10 @@ std::vector<Vlak*> vlaky;
 int nejblizsiVlak(int time) {
 	int nearest = 0;
 	for (unsigned int i = 0; i < vlaky.size(); i++) {
-		if ((vlaky.at(i)->getAktualniCas() - time) < (vlaky.at(nearest)->getAktualniCas() - time)) {
+		std::cout << "I: " << i << std::endl;
+		std::cout << "Time: " << Time << std::endl;
+		std::cout << "Aktualni cas vlaku: " << vlaky.at(i)->getCurrentTime()/3600 << std::endl;
+		if ((vlaky.at(i)->getCurrentTime() - time) > (vlaky.at(nearest)->getCurrentTime() - time)) {
 			nearest = i;
 		}
 	}
@@ -164,12 +166,12 @@ void Behavior() {
 		Into(cekarna[stanice]);
 	enterTrain:
 		unsigned long nearest = (unsigned long) nejblizsiVlak(TimeOfDay());
-		if (Stanice[stanice].Busy() && !vlaky.at(nearest)->isFull()) {
+		if (Stations[stanice].Busy() && !vlaky.at(nearest)->isFull()) {
 			cekarna[stanice].GetFirst();
 			Enter(*vlaky.at(nearest)->getStore());
 			inTrain = true;
 		} else {
-			WaitUntil(Stanice[stanice].Busy());
+			WaitUntil(Stations[stanice].Busy());
 			goto enterTrain;
 		}
 /*
@@ -189,8 +191,8 @@ void Behavior() {
 */
 
 
-		for (int i = stanice+1; i < PocetStanic; i++) {
-			WaitUntil(inTrain && Stanice[i].Busy());
+		for (int i = stanice+1; i < amountOfStations; i++) {
+			WaitUntil(inTrain && Stations[i].Busy());
 			double vystup = Random();
 			if (isInTrain() && vystup <= 0.1) {
 				Leave(*vlaky.at(nearest)->getStore());
@@ -199,7 +201,7 @@ void Behavior() {
 		}
 
 
-		if (Stanice[2].Busy() && inTrain) {
+		if (Stations[2].Busy() && inTrain) {
 			Leave(*vlaky.at(nearest)->getStore());
 		}
 
@@ -220,9 +222,9 @@ public:
 	void Behavior() {
 		int time = TimeOfDay();
 		if (castDne(time) == 1) {
-			Activate(Time+Exponential(SpickaIntervalVlaku/((cestujici[stanice]*pocetLidiVeSpicce)/Spicka)));
+			Activate(Time+Exponential(SpickaIntervalVlaku/((cestujici[stanice]*pocetLidiVeSpicce)/PeakTime)));
 		} else if (castDne(time) == 2) {
-			Activate(Time+Exponential(SpickaIntervalVlaku/((cestujici[stanice]*(1.00-pocetLidiVeSpicce))/Nespicka)));
+			Activate(Time+Exponential(SpickaIntervalVlaku/((cestujici[stanice]*(1.00-pocetLidiVeSpicce))/NonPeakTime)));
 		} else {
 			Activate(Time+Normal(3600, 55));
 		}
@@ -239,12 +241,12 @@ public:
 class GeneratorVlak : public Process {
 	void Behavior() {
 		Vlak* vlak;
-		int size = sizeof(prijezdy)/sizeof(prijezdy[0]);
+		int size = sizeof(arrivals)/sizeof(arrivals[0]);
 		for (int i = 0; i < size; i++) {
 		prijezd:
 			int time = TimeOfDay();
-			if (time == prijezdy[i]) {
-				vlak = (new Vlak(prijezdy[i]));
+			if (time == arrivals[i]) {
+				vlak = (new Vlak(arrivals[i]));
 				vlaky.push_back(vlak);
 				vlak->Activate(Time);
 			} else {
@@ -268,10 +270,10 @@ int main() {
 	Run();
 	//Table.Output();
 	//Trains.Output();
-	Stanice[0].Output();
-	Stanice[1].Output();
-	Stanice[2].Output();
-	Stanice[3].Output();
+	Stations[0].Output();
+	Stations[1].Output();
+	Stations[2].Output();
+	Stations[3].Output();
 	cekarna[0].Output();
 	cekarna[1].Output();
 	cekarna[2].Output();
