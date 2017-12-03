@@ -3,6 +3,7 @@
 #include <sstream>
 #include <string>
 #include <cstring>
+#include <vector>
 
 
 
@@ -24,7 +25,7 @@ const int CestujiciVeseli = 550;
 const int CestujiciBucovice = 250;
 const int CestujiciSlavkov = 200;
 
-int spickaPrijezdyBucovice[] = {5*3600, 6*3600, 7*3600, 8*3600};
+int prijezdy[] = {5*3600, 6*3600, 7*3600, 8*3600, 10*3600, 12*3600, 14*3600, 16*3600, 18*3600, 20*3600, 22*3600};
 
 Store Vagony("Vlak", 100);
 
@@ -34,7 +35,7 @@ Queue cekarna[3];
 Facility Stanice[PocetStanic];
 
 Histogram Table("Cestujici", 0, 600,20);
-Histogram Trains("Vlaky", 0, 1800,20);
+Histogram Trains("Vlaky", 0, 3600,20);
 int TimeOfDay(){
 	int time = ((int) Time % 86400);
 	return time;
@@ -52,9 +53,9 @@ int nejblizsiVlakVeSpicce(int time, int *array) {
 
 
 int castDne(int time) {
-	if ((time >= 5*3600) && (time < 8*3600+1800)) {
+	if ((time >= 5*3600) && (time <= 8*3600+1800)) {
 		return 1;
-	} else if ((time >= (8*3600+1800)) && (time < 22*3600)) {
+	} else if ((time > (8*3600+1800)) && (time <= 22*3600)) {
 		return 2;
 	} else {
 		return 0;
@@ -117,11 +118,12 @@ class Vlak : public Process {
 
 	void Behavior() {
 
+		std::cout << Time/3600 << std::endl;
 		double Prichod;
 		Prichod = Time;
 
-		Table(Time-Prichod);
 		Seize(Stanice[0]);
+		Trains(Time-Prichod);
 		Wait(Time+(Vagony.Free() > cekarna[0].Length() ? cekarna[0].Length() : Vagony.Free())*2);
 		Release(Stanice[0]);
 		Wait(Time+TrasaA*60);
@@ -140,8 +142,6 @@ class Vlak : public Process {
 		Seize(Stanice[3]);
 		Wait(Time+Vagony.Used()*4);
 		Release(Stanice[3]);
-
-
 	}
 };
 
@@ -182,28 +182,26 @@ public:
 
 
 
-class GeneratorVlak : public Event {
+class GeneratorVlak : public Process {
 	void Behavior() {
 
-		//double Prijezd = Time;
 		int time = TimeOfDay();
-		(new Vlak())->Activate();
-			if (castDne(time) == 1) {
-				Activate(Time+(SpickaIntervalVlaku*60.0));
-			} else if (castDne(time == 2)) {
-				Activate(Time+(NespickaIntervalVlaku*60.0));
+
+		for (unsigned int i = 0; i < sizeof(prijezdy)/sizeof(prijezdy[0]); i++) {
+			if (time == prijezdy[i]) {
+				(new Vlak())->Activate();
 			} else {
-			Activate(Time+(Noc*60.0));
+				Wait(prijezdy[i]-time);
 			}
-		//Table(Time-Prijezd);
+		}
 	}
 };
 
 int main() {
 	Print("Model vlakove trasy Bucovice - Brno\n");
-	SetOutput("model.out");
 	RandomSeed(time(NULL));
-	Init(0,86400);
+	Init(0, 2 * 86400);
+
 	(new GeneratorVlak())->Activate();
 	(new GeneratorCestujici(0))->Activate();
 	(new GeneratorCestujici(1))->Activate();
@@ -221,4 +219,4 @@ int main() {
 	Vagony.Output();
 
 	return 0;
-}
+};
