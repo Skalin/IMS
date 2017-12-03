@@ -187,11 +187,24 @@ class GeneratorVlak : public Process {
 
 		int time = TimeOfDay();
 
-		for (unsigned int i = 0; i < sizeof(prijezdy)/sizeof(prijezdy[0]); i++) {
+		std::cout << sizeof(prijezdy)/sizeof(prijezdy[0]) << std::endl;
+
+		int size = sizeof(prijezdy)/sizeof(prijezdy[0]);
+		for (int i = 0; i < size; i++) {
+			Print("Cyklic\n");
+			std::cout << time << std::endl;
+			prijezd:
 			if (time == prijezdy[i]) {
-				(new Vlak())->Activate();
+				if (castDne(time) == 1) {
+					(new Vlak())->Activate();
+
+				} else if (castDne(time) == 2) {
+					(new Vlak())->Activate();
+				}
 			} else {
-				Wait(prijezdy[i]-time);
+				Wait(3600);
+				goto prijezd;
+				Print("Else vetev\n");
 			}
 		}
 	}
@@ -200,7 +213,7 @@ class GeneratorVlak : public Process {
 int main() {
 	Print("Model vlakove trasy Bucovice - Brno\n");
 	RandomSeed(time(NULL));
-	Init(0, 2 * 86400);
+	Init(0, 86400);
 
 	(new GeneratorVlak())->Activate();
 	(new GeneratorCestujici(0))->Activate();
