@@ -243,7 +243,7 @@ class TrainGenerator : public Process {
 int main() {
 	Print("Model vlakove trasy Bucovice - Brno\n");
 	RandomSeed(time(NULL));
-	Init(0, 2*86400);
+	Init(0, 86400);
 
 	(new PassengerGenerator(0))->Activate();
 	(new PassengerGenerator(1))->Activate();
