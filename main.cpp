@@ -58,8 +58,9 @@ int partOfDay(int time) {
 
 class Train : public Process {
 public:
-	Train(int time) : Process() {
+	Train(int time, int size) : Process() {
 		initDepartureTime = time;
+		vectorIndex = size;
 		store = new Store((unsigned int) round(amountOfWagons*pocetMistVeVagonu));
 		currentTime = initDepartureTime;
 	}
@@ -80,13 +81,24 @@ public:
 
 			if (i == amountOfStations-1) {
 				this->getStore()->Leave((this->getStore()->Used()));
-
 			}
 		}
+
+		if (trains.size() == getVectorIndex()) {
+			trains.clear();
+		}
+	}
+
+	void removeFromVector(int index) {
+		trains.erase(trains.begin()+vectorIndex, trains.end());
 	}
 
 	int getInitDepartureTime() const {
 		return initDepartureTime;
+	}
+
+	int getVectorIndex() const {
+		return vectorIndex;
 	}
 
 	int getCurrentStation() const {
@@ -104,6 +116,7 @@ public:
 		return this->store->Full();
 	}
 private:
+	int vectorIndex;
 	int initDepartureTime;
 	Store *store;
 	int currentTime;
@@ -146,13 +159,13 @@ public:
 enterTrain:
 		int nearest = getTrainInStation(station);
 		if (Stations[station].Busy() && !trains.at(nearest)->isFull()) {
-			Print("Vychazim z cekarny\n");
-			std::cout << "Pocet cekajicich: " << waitingRooms[station].Length() << " v cekarne: " << station << std::endl;
+			//Print("Vychazim z cekarny\n");
+			//std::cout << "Pocet cekajicich: " << waitingRooms[station].Length() << " v cekarne: " << station << std::endl;
 			if (waitingRooms[station].Length() > 0) {
 				waitingRooms[station].GetFirst();
 				Enter(*trains.at(nearest)->getStore());
 			}
-			Print("Vstupuji do vlaku\n");
+			//Print("Vstupuji do vlaku\n");
 			inTrain = true;
 		} else {
 			Wait(1);
@@ -211,12 +224,13 @@ class TrainGenerator : public Process {
 		Train* vlak;
 		int size = sizeof(departures)/sizeof(departures[0]);
 		for (int i = 0; i < size; i++) {
-prijezd:
+		prijezd:
 			int time = TimeOfDay();
 			if (time == departures[i]) {
-				vlak = (new Train(departures[i]));
+				Print("Id: %d\n", trains.size());
+				vlak = (new Train(departures[i], trains.size()));
 				trains.push_back(vlak);
-				vlak->Activate(Time);
+				vlak->Activate(time);
 			} else {
 				Wait(1);
 				goto prijezd;
