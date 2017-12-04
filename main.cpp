@@ -28,6 +28,8 @@ const int passengers[3] = {550, 250, 200};
 
 int departures[] = {4*3600+3000, 6*3600+60, 7*3600+60, 9*3600+60, 11*3600+60, 13*3600+60, 15*3600+60, 17*3600+60, 19*3600+60, 21*3600+60};
 
+class Train;
+std::vector<Train*> trains;
 
 const int amountOfStations = 4;
 Queue waitingRooms[amountOfStations-1];
@@ -44,7 +46,7 @@ int TimeOfDay(){
 
 
 int partOfDay(int time) {
-	if ((time >= 4*3600+1800) && (time <= 8*3600+1800)) {
+	if ((time >= 4*3600) && (time <= 8*3600+1800)) {
 		return 1;
 	} else if ((time > (8*3600+1800)) && (time < 21*3600)) {
 		return 2;
@@ -78,6 +80,7 @@ public:
 
 			if (i == amountOfStations-1) {
 				this->getStore()->Leave((this->getStore()->Used()));
+
 			}
 		}
 	}
@@ -106,9 +109,6 @@ private:
 	int currentTime;
 	int currentStation;
 };
-
-
-std::vector<Train*> trains;
 
 
 int getTrainInStation(int station) {
@@ -229,7 +229,7 @@ prijezd:
 int main() {
 	Print("Model vlakove trasy Bucovice - Brno\n");
 	RandomSeed(time(NULL));
-	Init(0, 86400);
+	Init(0, 2*86400);
 
 	(new PassengerGenerator(0))->Activate();
 	(new PassengerGenerator(1))->Activate();
@@ -246,6 +246,7 @@ int main() {
 	waitingRooms[1].Output();
 	waitingRooms[2].Output();
 	for (unsigned int i = 0; i < trains.size(); i++) {
+		Print("Vlak: %d\n", i);
 		trains.at(i)->getStore()->Output();
 	}
 
