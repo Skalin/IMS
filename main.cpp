@@ -1,6 +1,8 @@
+
 #include "simlib.h"
 #include <iostream>
 #include <sstream>
+#include <string>
 #include <cstring>
 #include <vector>
 #include <cmath>
@@ -28,7 +30,7 @@ int departures[] = {4*3600+3000, 6*3600+60, 7*3600+60, 9*3600+60, 11*3600+60, 13
 
 
 const int amountOfStations = 4;
-Queue waitingRooms[3];
+Queue waitingRooms[amountOfStations-1];
 
 Facility Stations[amountOfStations];
 
@@ -42,9 +44,9 @@ int TimeOfDay(){
 
 
 int partOfDay(int time) {
-	if ((time >= 4*3600) && (time <= 8*3600+1800)) {
+	if ((time >= 4*3600+1800) && (time <= 8*3600+1800)) {
 		return 1;
-	} else if ((time > (8*3600+1800)) && (time < 20*3600+3000)) {
+	} else if ((time > (8*3600+1800)) && (time < 21*3600)) {
 		return 2;
 	} else {
 		return 0;
@@ -63,21 +65,19 @@ public:
 
 	void Behavior() {
 
-
-		this->currentStation = -1;
-		for (unsigned int i = 0; i < amountOfStations; i++) {
-			Print("Simulating train behavior\n");
-			Print("I: %d\n",i);
+		currentStation = -1;
+		for (int i = 0; i < amountOfStations; i++) {
 			this->currentTime = TimeOfDay();
 			Seize(Stations[i]);
-			this->currentStation = i;
-			Wait(2); // zastaveni vlaku
+			currentStation = i;
+			Wait(30);
 			Release(Stations[i]);
-			this->currentStation = -1;
-			Print("Zabranych mist ve vlaku: %d\n", this->getStore()->Used());
-			if (i < amountOfStations-1) {
-				Print("Leaving station..\n");
+			currentStation = -1;
+			if (i < amountOfStations-1)
 				Wait(routes[i]);
+
+			if (i == amountOfStations-1) {
+				this->getStore()->Leave((this->getStore()->Used()));
 			}
 		}
 	}
@@ -90,10 +90,6 @@ public:
 		return currentStation;
 	}
 
-	bool onRoute() const {
-		return (currentStation == -1);
-	}
-
 	int getCurrentTime() const {
 		return currentTime;
 	}
@@ -101,7 +97,7 @@ public:
 	Store *getStore() const {
 		return store;
 	}
-	bool isFull() const {
+	bool isFull() {
 		return this->store->Full();
 	}
 private:
@@ -128,6 +124,7 @@ int getTrainInStation(int station) {
 }
 
 
+
 class Passenger : public Process {
 public:
 	Passenger(int Station) : Process() {
@@ -139,49 +136,45 @@ public:
 		return inTrain;
 	}
 
-	int getNearestTrain() {
-		return nearest;
-	}
+
 
 	void Behavior() {
+		inTrain = false;
+
 
 		Into(waitingRooms[station]);
-	enterTrain:
-		this->nearest = getTrainInStation(station);
-		Print("Nejblizsi vlak: %d\n", getNearestTrain());
-		if (nearest != -1 && Stations[station].Busy() && !trains.at(nearest)->isFull()) {
-			Print("Train %d in station %d\n", nearest, station);
-			Print("Pocet lidi v cekarne: %d\n", waitingRooms[station].Length());
-			waitingRooms[station].GetFirst();
-			Enter(*trains.at(nearest)->getStore());
-			this->inTrain = true;
+enterTrain:
+		int nearest = getTrainInStation(station);
+		if (Stations[station].Busy() && !trains.at(nearest)->isFull()) {
+			Print("Vychazim z cekarny\n");
+			std::cout << "Pocet cekajicich: " << waitingRooms[station].Length() << " v cekarne: " << station << std::endl;
+			if (waitingRooms[station].Length() > 0) {
+				waitingRooms[station].GetFirst();
+				Enter(*trains.at(nearest)->getStore());
+			}
+			Print("Vstupuji do vlaku\n");
+			inTrain = true;
 		} else {
-			Print("Passenger is waiting\n");
 			Wait(1);
 			goto enterTrain;
 		}
 
-/*
+
 		for (int i = station+1; i < amountOfStations; i++) {
 
+			double vystup = Random();
 		test:
-		double vystup = Random();
-			if (Stations[amountOfStations-1].Busy() && isInTrain()) {
-				Leave(*trains.at(getTrainInStation(amountOfStations-1))->getStore());
-				this->inTrain = false;
-			} else if (Stations[i].Busy() && isInTrain() && vystup <= 0.1) {
+			if (Stations[i].Busy() && isInTrain() && vystup <= 0.1 ) {
 				Leave(*trains.at(getTrainInStation(i))->getStore());
 				this->inTrain = false;
 			} else {
-				Wait(2);
+				Wait(1);
 				goto test;
 			}
 		}
 
-*/
-
 	}
-	int nearest;
+
 	bool inTrain;
 	int station;
 };
@@ -218,7 +211,7 @@ class TrainGenerator : public Process {
 		Train* vlak;
 		int size = sizeof(departures)/sizeof(departures[0]);
 		for (int i = 0; i < size; i++) {
-		prijezd:
+prijezd:
 			int time = TimeOfDay();
 			if (time == departures[i]) {
 				vlak = (new Train(departures[i]));
@@ -238,10 +231,10 @@ int main() {
 	RandomSeed(time(NULL));
 	Init(0, 86400);
 
-	(new TrainGenerator())->Activate();
 	(new PassengerGenerator(0))->Activate();
 	(new PassengerGenerator(1))->Activate();
 	(new PassengerGenerator(2))->Activate();
+	(new TrainGenerator())->Activate();
 	Run();
 	//Table.Output();
 	//Trains.Output();
@@ -252,7 +245,6 @@ int main() {
 	waitingRooms[0].Output();
 	waitingRooms[1].Output();
 	waitingRooms[2].Output();
-	std::cout << "Amount of trains: " << trains.size() << std::endl;
 	for (unsigned int i = 0; i < trains.size(); i++) {
 		trains.at(i)->getStore()->Output();
 	}
