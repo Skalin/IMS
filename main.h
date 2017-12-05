@@ -32,6 +32,7 @@ const int departureTimes[] = {4*HOUR+50*MIN, 6*HOUR+MIN, 7*HOUR+MIN, 9*HOUR+MIN,
 
 int getPartOfDay(int time);
 int TimeOfDay();
+std::string getNameOfStation(int station);
 
 class Passenger;
 class Train;
