@@ -7,7 +7,10 @@
 #include <vector>
 #include <cmath>
 
+
+std::vector<int> departures (departureTimes, departureTimes + sizeof(departureTimes) / sizeof(departureTimes[0]));
 std::vector<Train*> trains;
+
 
 Queue waitingRooms[amountOfStations-1];
 
@@ -21,6 +24,9 @@ int TimeOfDay() {
 	int time = ((int) Time % 86400);
 	return time;
 }
+
+
+
 
 
 int getPartOfDay(int time) {
@@ -59,12 +65,22 @@ public:
 
 			if (i == amountOfStations-1) {
 				this->getStore()->Leave((this->getStore()->Used()));
+				double usage = 100*(double)this->getUsed()/(double)this->getCapacity();
+				Print("Train: %d starting at %d hours| left station: %d | used: %d | capacity: %d | usage: %.2f %\n", getVectorIndex(), getInitDepartureTime()/3600, i, this->getUsed(), this->getCapacity(), usage);
+			}
+			if (i != amountOfStations-1) {
+				double usage = 100*(double)this->getUsed()/(double)this->getCapacity();
+				Print("Train: %d starting at %d hours | left station: %d | used: %d | capacity: %d | usage: %.2f %\n", getVectorIndex(), getInitDepartureTime()/3600, i, this->getUsed(), this->getCapacity(), usage);
 			}
 		}
 
 		if (trains.size() == getVectorIndex()) {
 			trains.clear();
 		}
+	}
+
+	int getInitDepartureTime() const {
+		return initDepartureTime;
 	}
 
 	unsigned int getVectorIndex() const {
@@ -82,6 +98,15 @@ public:
 	Store *getStore() const {
 		return store;
 	}
+
+	unsigned long getUsed() const {
+		return this->getStore()->Used();
+	}
+
+	unsigned long getCapacity() const {
+		return this->getStore()->Capacity();
+	}
+
 	bool isFull() {
 		return this->store->Full();
 	}
@@ -184,22 +209,19 @@ public:
 class TrainGenerator : public Process {
 	void Behavior() {
 		Train* vlak;
-		int size = sizeof(departures)/sizeof(departures[0]);
+		unsigned long size = departures.size();
 		for (int i = 0; i < size; i++) {
 		prijezd:
 			int time = TimeOfDay();
-			if (time == departures[i]) {
-				vlak = (new Train(departures[i], trains.size()));
+			if (time == departures.at(i)) {
+				vlak = (new Train(departures.at(i), trains.size()));
 				trains.push_back(vlak);
 				vlak->Activate(Time);
-				Print("Generating train.. -> ");
-				Print("i: %d\n", i);
-				Print("Store Cap of %d: %d\n", i, trains.at(i)->getStore()->Capacity());
 				if (i == (size -1)) {
 					i = -1;
 				}
 			} else {
-				Wait(1);
+				Wait(MIN);
 				goto prijezd;
 			}
 		}
@@ -233,10 +255,10 @@ int main(int argc, char *argv[]) {
 	Stations[3].Output();
 	waitingRooms[0].Output();
 	waitingRooms[1].Output();
-	waitingRooms[2].Output();
+	waitingRooms[2].Output();/*
 	for (unsigned int i = 0; i < trains.size(); i++) {
 		trains.at(i)->getStore()->Output();
-	}
+	}*/
 
 	return 0;
 };

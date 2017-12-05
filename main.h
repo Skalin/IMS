@@ -28,8 +28,7 @@ const double TrainsInNonPeakTime = NonPeakTime/NonPeakTimeInterval;
 
 const int passengers[3] = {550, 250, 200};
 const int amountOfStations = 4;
-
-int departures[] = {4*HOUR+50*MIN, 6*HOUR+MIN, 7*HOUR+MIN, 9*HOUR+MIN, 11*HOUR+MIN, 13*HOUR+MIN, 15*HOUR+MIN, 17*HOUR+MIN, 19*HOUR+MIN, 21*HOUR+MIN};
+const int departureTimes[] = {4*HOUR+50*MIN, 6*HOUR+MIN, 7*HOUR+MIN, 9*HOUR+MIN, 11*HOUR+MIN, 13*HOUR+MIN, 15*HOUR+MIN, 17*HOUR+MIN, 19*HOUR+MIN, 21*HOUR+MIN};
 
 int getPartOfDay(int time);
 int TimeOfDay();
