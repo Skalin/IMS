@@ -322,19 +322,23 @@ int main(int argc, char *argv[]) {
 
 	Print("Model vlakove trasy Bucovice - Brno\n");
 	if (newTrainFlag) {
-		insertNewTrain(trainTime);
 		Print("Simulace se pokusi vlozit novy vlak v case: %s\n", argv[arg]);
+		insertNewTrain(trainTime);
 	}
 
 	RandomSeed(time(NULL));
 	Init(0, (DAY*amountOfDays));
 
 	// Passenger and train generators
+	(new TrainGenerator())->Activate();
 	(new PassengerGenerator(0))->Activate();
 	(new PassengerGenerator(1))->Activate();
 	(new PassengerGenerator(2))->Activate();
-	(new TrainGenerator())->Activate();
+
+	// Run simulation
 	Run();
+
+	// Print output for all stations and waiting rooms in these stations
 	for (unsigned int i = 0; i < amountOfStations; i++) {
 		Print("Stanice: %s\n", getNameOfStation(i).c_str());
 		Stations[i].Output();
