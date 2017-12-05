@@ -6,6 +6,8 @@
 #define IMS_MAIN_H
 
 #include <iostream>
+#include <cstring>
+#include <string>
 #include <sstream>
 #include <vector>
 #include <cmath>
@@ -36,6 +38,7 @@ const int departureTimes[] = {4*HOUR+50*MIN, 6*HOUR+MIN, 7*HOUR+MIN, 9*HOUR+MIN,
 int getPartOfDay(int time);
 int TimeOfDay();
 std::string getNameOfStation(int station);
+void insertNewTrain();
 
 class Passenger;
 class Train;

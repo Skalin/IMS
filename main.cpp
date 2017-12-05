@@ -1,4 +1,5 @@
 
+#include <cstring>
 #include "simlib.h"
 #include "main.h"
 
@@ -9,11 +10,20 @@ std::string namesOfStations[amountOfStations] = {"Veseli", "Bucovice", "Slavkov"
 
 Queue waitingRooms[amountOfStations-1];
 
+int passengersLeftInTrain = 0;
 
 Facility Stations[amountOfStations];
 
 Histogram Table("Cestujici", 0, HOUR/6, 20);
 Histogram Trains("Vlaky", 0, HOUR, 20);
+
+void printHelp() {}
+
+
+void throwException(const char *message) {
+	std::cerr << message << std::endl;
+	exit(EXIT_FAILURE);
+}
 
 
 int TimeOfDay() {
@@ -36,6 +46,11 @@ int getPartOfDay(int time) {
 	} else {
 		return 0;
 	}
+}
+
+
+void insertNewTrain(int time) {
+
 }
 
 
@@ -68,9 +83,7 @@ public:
 			}
 
 			if (i == amountOfStations-1) {
-				while(!this->store->Empty()) {
-					this->store->Leave(1);
-				}
+				passengersLeaveTrain();
 				double usage = 100*(double)this->getUsed()/(double)this->getCapacity();
 				Print("| Train starting at %02d:%02d | ended in station:\t%s at %02d:%02d \t\t| used: %d\t| capacity: %d\t| usage: %.2f %\t\t\t\t\t|\n", getInitDepartureTime()/HOUR, (getInitDepartureTime()%HOUR)/MIN, getNameOfStation(i).c_str(), getCurrentTime()/HOUR, (getCurrentTime()%HOUR)/MIN, this->getUsed(), this->getCapacity(), usage);
 				double trainFullness = this->getTrainFullness();
@@ -106,6 +119,18 @@ public:
 	Store *getStore() const {
 		return store;
 	}
+
+
+
+	void passengersLeaveTrain() {
+		while(!this->store->Empty()) {
+			try {
+				this->store->Leave(1);
+			} catch (std::exception const &e) {
+				passengersLeftInTrain += 1;
+			}
+
+		}}
 
 	double getTrainFullness() const {
 		double sumOfFullness = 0;
@@ -250,20 +275,61 @@ class TrainGenerator : public Process {
 };
 
 
-bool parseArguments(int argc, char *argv[]) {
-	return true;
+void parseArguments(int argc, char *argv[], int *newTrainTime, int *arg, bool *newTrain) {
+
+	for (int i = 1; i < argc; i++){
+		if (strcmp(argv[i],"-h") == 0 || strcmp(argv[i], "--help") == 0) {
+			printHelp();
+		}
+
+		if (strcmp(argv[i], "-t") == 0) {
+			*arg = i+1;
+			char *str = (argv[*arg]);
+			if (strlen(str) > 4 || strlen(str) < 4) {
+				throwException("Wrong format of time, please enter time in format: HHMM");
+			} else {
+				int hours = 0;
+				int minutes = 0;
+				for (unsigned int i = 0; i < strlen(str); i++) {
+					if (i == 0) {
+						hours += ((int) (str[i]-48))*10;
+					} else if (i == 1) {
+						hours += ((int) (str[i]-48));
+					} else if (i == 2) {
+						minutes += ((int) (str[i]-48))*10;
+					} else {
+						minutes += ((int) (str[i]-48));
+					}
+					*newTrainTime = HOUR*hours+MIN*minutes;
+				}
+				*newTrain = true;
+			}
+		}
+	}
 }
 
 
 int main(int argc, char *argv[]) {
 
-	parseArguments(argc, argv);
-	double x = 1.0;
+	/* Default value of amount of days the simulation will run */
+	double amountOfDays = 1.0;
+
+	int trainTime = 0;
+	bool newTrainFlag = false;
+	int arg = 1;
+
+	parseArguments(argc, argv, &trainTime, &arg, &newTrainFlag);
 
 	Print("Model vlakove trasy Bucovice - Brno\n");
-	RandomSeed(time(NULL));
-	Init(0, (DAY*x));
+	if (newTrainFlag) {
+		insertNewTrain(trainTime);
+		Print("Simulace se pokusi vlozit novy vlak v case: %s\n", argv[arg]);
+	}
 
+	RandomSeed(time(NULL));
+	Init(0, (DAY*amountOfDays));
+
+	// Passenger and train generators
 	(new PassengerGenerator(0))->Activate();
 	(new PassengerGenerator(1))->Activate();
 	(new PassengerGenerator(2))->Activate();
