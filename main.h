@@ -5,7 +5,10 @@
 #ifndef IMS_MAIN_H
 #define IMS_MAIN_H
 
-
+#include <iostream>
+#include <sstream>
+#include <vector>
+#include <cmath>
 
 const int DAY = 86400;
 const int HOUR = 3600;
