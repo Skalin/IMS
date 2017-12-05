@@ -21,8 +21,8 @@ const double NonPeakTime = 780.5; // doba trvani nespicky v minutach(cas mezi sp
 const double PeakTimeInterval = HOUR/MIN; // interval mezi vlaky ve spicce
 const double NonPeakTimeInterval = 2*HOUR/MIN; // interval mezi vlaky mimo spicku
 const int timeToEnter = 2;
-const int amountOfWagons = 2;
-const double amountOfSpacesToSitInWagon = 34;
+const int amountOfWagons = 3;
+const int amountOfSpacesToSitInWagon = 34;
 const int amountOfEntersIntoWagon = amountOfWagons*2;
 
 const double PeakTimeParameter = 0.54; // procent lidi ve spicce
