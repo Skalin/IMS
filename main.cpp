@@ -44,10 +44,7 @@ public:
 	Train(int time, unsigned int size) : Process() {
 		initDepartureTime = time;
 		vectorIndex = size;
-		if (getPartOfDay(time) == 1) {
-			store = new Store((unsigned int) ((4*amountOfSpacesToSitInWagon)));
-		}
-		store = new Store((unsigned int) ((amountOfWagons+(int)(round(Random()*2)))*amountOfSpacesToSitInWagon));
+		store = new Store((amountOfWagons)*amountOfSpacesToSitInWagon);
 		currentTime = initDepartureTime;
 	}
 
@@ -64,11 +61,16 @@ public:
 			this->filledIn[i] = this->getUsed();
 			this->currentTime = TimeOfDay();
 			currentStation = -1;
-			if (i < amountOfStations-1)
+			if (i < amountOfStations-1) {
+				double usage = 100*(double)this->getUsed()/(double)this->getCapacity();
+				Print("| Train starting at %02d:%02d | left the station:\t%s at %02d:%02d \t| used: %d\t| capacity: %d\t| usage: %.2f % \t\t\t\t|\n", getInitDepartureTime()/HOUR, (getInitDepartureTime()%HOUR)/MIN, getNameOfStation(i).c_str(), getCurrentTime()/HOUR, (getCurrentTime()%HOUR)/MIN, this->getUsed(), this->getCapacity(), usage);
 				Wait(routes[i]);
+			}
 
 			if (i == amountOfStations-1) {
-				this->getStore()->Leave((this->getStore()->Used()));
+				while(!this->store->Empty()) {
+					this->store->Leave(1);
+				}
 				double usage = 100*(double)this->getUsed()/(double)this->getCapacity();
 				Print("| Train starting at %02d:%02d | ended in station:\t%s at %02d:%02d \t\t| used: %d\t| capacity: %d\t| usage: %.2f %\t\t\t\t\t|\n", getInitDepartureTime()/HOUR, (getInitDepartureTime()%HOUR)/MIN, getNameOfStation(i).c_str(), getCurrentTime()/HOUR, (getCurrentTime()%HOUR)/MIN, this->getUsed(), this->getCapacity(), usage);
 				double trainFullness = this->getTrainFullness();
@@ -77,10 +79,6 @@ public:
 				} else {
 					Print("| Train starting at %02d:%02d will not be fulfilled on majority of route and therefore it is not good to run it in this time with a coefficient of: %.1f \t|\n", getInitDepartureTime()/HOUR, (getInitDepartureTime()%HOUR)/MIN, trainFullness);
 				}
-			}
-			if (i != amountOfStations-1) {
-				double usage = 100*(double)this->getUsed()/(double)this->getCapacity();
-				Print("| Train starting at %02d:%02d | left the station:\t%s at %02d:%02d \t| used: %d\t| capacity: %d\t| usage: %.2f % \t\t\t\t|\n", getInitDepartureTime()/HOUR, (getInitDepartureTime()%HOUR)/MIN, getNameOfStation(i).c_str(), getCurrentTime()/HOUR, (getCurrentTime()%HOUR)/MIN, this->getUsed(), this->getCapacity(), usage);
 			}
 		}
 
