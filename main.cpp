@@ -14,9 +14,6 @@ int passengersLeftInTrain = 0;
 
 Facility Stations[amountOfStations];
 
-Histogram Table("Cestujici", 0, HOUR/6, 20);
-Histogram Trains("Vlaky", 0, HOUR, 20);
-
 void printHelp() {
 	std::cout << "IMS 2017/2018 - Doprava zbozi nebo osob" << std::endl;
 	std::cout << "Individualni zadani: Vyuziti a efektivita vlakoveho spoje: Veseli - Bucovice - Slavkov - Brno\n"  << std::endl;
