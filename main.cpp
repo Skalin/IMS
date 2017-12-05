@@ -1,51 +1,29 @@
 
 #include "simlib.h"
+#include "main.h"
 #include <iostream>
 #include <sstream>
-#include <string>
 #include <cstring>
 #include <vector>
 #include <cmath>
 
-
-
-const double routes[3] = {60.0*60.0, 10.0*60.0, 25.0*60.0}; // doba cesty na jednotlivych usecich - Veseli - Bucovice, Bucovice - Slavkov, Slavkov - Brno
-const double PeakTime = 180.5; // doba trvani spicky v minutach
-const double NonPeakTime = 780.5; // doba trvani nespicky v minutach(cas mezi spickou a noci)
-
-const double PeakTimeInterval = 60; // interval mezi vlaky ve spicce
-const double NonPeakTimeInterval = 120; // interval mezi vlaky mimo spickuS
-const int timeToEnter = 2;
-const int amountOfWagons = 3;
-const double pocetMistVeVagonu = 33.3;
-const int amountOfEntersIntoWagon = amountOfWagons*2;
-
-const double PeakTimeParameter = 0.54; // procent lidi ve spicce
-const double TrainsInPeakTime = PeakTime/PeakTimeInterval;
-const double TrainsInNonPeakTime = NonPeakTime/NonPeakTimeInterval;
-
-const int passengers[3] = {550, 250, 200};
-
-int departures[] = {4*3600+3000, 6*3600+60, 7*3600+60, 9*3600+60, 11*3600+60, 13*3600+60, 15*3600+60, 17*3600+60, 19*3600+60, 21*3600+60};
-
-class Train;
 std::vector<Train*> trains;
 
-const int amountOfStations = 4;
 Queue waitingRooms[amountOfStations-1];
 
 Facility Stations[amountOfStations];
 
 Histogram Table("Cestujici", 0, 600,20);
 Histogram Trains("Vlaky", 0, 3600,20);
-int TimeOfDay(){
+
+
+int TimeOfDay() {
 	int time = ((int) Time % 86400);
 	return time;
 }
 
 
-
-int partOfDay(int time) {
+int getPartOfDay(int time) {
 	if ((time >= 4*3600) && (time <= 8*3600+1800)) {
 		return 1;
 	} else if ((time > (8*3600+1800)) && (time < 21*3600)) {
@@ -58,10 +36,10 @@ int partOfDay(int time) {
 
 class Train : public Process {
 public:
-	Train(int time, int size) : Process() {
+	Train(int time, unsigned int size) : Process() {
 		initDepartureTime = time;
 		vectorIndex = size;
-		store = new Store((unsigned int) round(amountOfWagons*pocetMistVeVagonu));
+		store = new Store((unsigned int) round(amountOfWagons*amountOfSpacesToSitInWagon));
 		currentTime = initDepartureTime;
 	}
 
@@ -73,7 +51,7 @@ public:
 			this->currentTime = TimeOfDay();
 			Seize(Stations[i]);
 			currentStation = i;
-			Wait(30);
+			Wait(this->store->Free() > waitingRooms[i].Length() ? ((waitingRooms[i].Length()+1)/amountOfEntersIntoWagon/amountOfWagons*timeToEnter) : ((this->store->Free()+1)/amountOfEntersIntoWagon/amountOfWagons*timeToEnter));
 			Release(Stations[i]);
 			currentStation = -1;
 			if (i < amountOfStations-1)
@@ -89,15 +67,7 @@ public:
 		}
 	}
 
-	void removeFromVector(int index) {
-		trains.erase(trains.begin()+vectorIndex, trains.end());
-	}
-
-	int getInitDepartureTime() const {
-		return initDepartureTime;
-	}
-
-	int getVectorIndex() const {
+	unsigned int getVectorIndex() const {
 		return vectorIndex;
 	}
 
@@ -116,7 +86,7 @@ public:
 		return this->store->Full();
 	}
 private:
-	int vectorIndex;
+	unsigned int vectorIndex;
 	int initDepartureTime;
 	Store *store;
 	int currentTime;
@@ -125,9 +95,6 @@ private:
 
 
 int getTrainInStation(int station) {
-	//Print("Looking for station: %d\n", station);
-	//Print("Amount of Trains: %d\n", trains.size());
-
 	for (unsigned int i = 0; i < trains.size(); i++) {
 		if ((trains.at(i)->getCurrentStation() == station)) {
 			return i;
@@ -158,14 +125,11 @@ public:
 		Into(waitingRooms[station]);
 enterTrain:
 		int nearest = getTrainInStation(station);
-		if (Stations[station].Busy() && !trains.at(nearest)->isFull()) {
-			//Print("Vychazim z cekarny\n");
-			//std::cout << "Pocet cekajicich: " << waitingRooms[station].Length() << " v cekarne: " << station << std::endl;
+		if (Stations[station].Busy() && !trains.at((unsigned long) nearest)->isFull()) {
 			if (waitingRooms[station].Length() > 0) {
 				waitingRooms[station].GetFirst();
-				Enter(*trains.at(nearest)->getStore());
+				Enter(*trains.at((unsigned long) nearest)->getStore());
 			}
-			//Print("Vstupuji do vlaku\n");
 			inTrain = true;
 		} else {
 			Wait(1);
@@ -178,7 +142,7 @@ enterTrain:
 			double vystup = Random();
 		test:
 			if (Stations[i].Busy() && isInTrain() && vystup <= 0.1 ) {
-				Leave(*trains.at(getTrainInStation(i))->getStore());
+				Leave(*trains.at((unsigned long) getTrainInStation(i))->getStore());
 				this->inTrain = false;
 			} else {
 				Wait(1);
@@ -202,9 +166,9 @@ public:
 
 	void Behavior() {
 		int time = TimeOfDay();
-		if (partOfDay(time) == 1) {
+		if (getPartOfDay(time) == 1) {
 			Activate(Time+Exponential(PeakTimeInterval/((passengers[station]*PeakTimeParameter)/PeakTime)));
-		} else if (partOfDay(time) == 2) {
+		} else if (getPartOfDay(time) == 2) {
 			Activate(Time+Exponential(NonPeakTimeInterval/((passengers[station]*(1.00-PeakTimeParameter))/NonPeakTime)));
 		} else {
 			Activate(Time+Normal(3600, 55));
@@ -217,20 +181,22 @@ public:
 
 };
 
-
-
 class TrainGenerator : public Process {
 	void Behavior() {
 		Train* vlak;
 		int size = sizeof(departures)/sizeof(departures[0]);
 		for (int i = 0; i < size; i++) {
-		prijezd:
+	prijezd:
 			int time = TimeOfDay();
 			if (time == departures[i]) {
-				Print("Id: %d\n", trains.size());
 				vlak = (new Train(departures[i], trains.size()));
 				trains.push_back(vlak);
-				vlak->Activate(time);
+				vlak->Activate(Time);
+				Print("Generating train.. -> ");
+				Print("i: %d\n", i);
+				if (i == (size -1)) {
+					i = -1;
+				}
 			} else {
 				Wait(1);
 				goto prijezd;
@@ -240,18 +206,26 @@ class TrainGenerator : public Process {
 
 };
 
-int main() {
+
+bool parseArguments(int argc, char *argv[]) {
+	return true;
+}
+
+
+int main(int argc, char *argv[]) {
+
+	parseArguments(argc, argv);
+	double x = 1.0;
+
 	Print("Model vlakove trasy Bucovice - Brno\n");
 	RandomSeed(time(NULL));
-	Init(0, 86400);
+	Init(0, (DAY*x));
 
 	(new PassengerGenerator(0))->Activate();
 	(new PassengerGenerator(1))->Activate();
 	(new PassengerGenerator(2))->Activate();
 	(new TrainGenerator())->Activate();
 	Run();
-	//Table.Output();
-	//Trains.Output();
 	Stations[0].Output();
 	Stations[1].Output();
 	Stations[2].Output();
@@ -260,7 +234,6 @@ int main() {
 	waitingRooms[1].Output();
 	waitingRooms[2].Output();
 	for (unsigned int i = 0; i < trains.size(); i++) {
-		Print("Vlak: %d\n", i);
 		trains.at(i)->getStore()->Output();
 	}
 
