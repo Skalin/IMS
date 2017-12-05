@@ -39,7 +39,7 @@ public:
 	Train(int time, unsigned int size) : Process() {
 		initDepartureTime = time;
 		vectorIndex = size;
-		store = new Store((unsigned int) round(amountOfWagons*amountOfSpacesToSitInWagon));
+		store = new Store((unsigned int) ((amountOfWagons+(int)(round(Random()*2)))*amountOfSpacesToSitInWagon));
 		currentTime = initDepartureTime;
 	}
 
@@ -123,7 +123,7 @@ public:
 
 
 		Into(waitingRooms[station]);
-enterTrain:
+	enterTrain:
 		int nearest = getTrainInStation(station);
 		if (Stations[station].Busy() && !trains.at((unsigned long) nearest)->isFull()) {
 			if (waitingRooms[station].Length() > 0) {
@@ -186,7 +186,7 @@ class TrainGenerator : public Process {
 		Train* vlak;
 		int size = sizeof(departures)/sizeof(departures[0]);
 		for (int i = 0; i < size; i++) {
-	prijezd:
+		prijezd:
 			int time = TimeOfDay();
 			if (time == departures[i]) {
 				vlak = (new Train(departures[i], trains.size()));
@@ -194,6 +194,7 @@ class TrainGenerator : public Process {
 				vlak->Activate(Time);
 				Print("Generating train.. -> ");
 				Print("i: %d\n", i);
+				Print("Store Cap of %d: %d\n", i, trains.at(i)->getStore()->Capacity());
 				if (i == (size -1)) {
 					i = -1;
 				}
