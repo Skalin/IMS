@@ -3,7 +3,6 @@
 #include "main.h"
 #include <iostream>
 #include <sstream>
-#include <cstring>
 #include <vector>
 #include <cmath>
 
@@ -11,13 +10,14 @@
 std::vector<int> departures (departureTimes, departureTimes + sizeof(departureTimes) / sizeof(departureTimes[0]));
 std::vector<Train*> trains;
 
+std::string namesOfStations[4] = {"Veseli", "Bucovice", "Slavkov", "Brno"};
 
 Queue waitingRooms[amountOfStations-1];
 
 Facility Stations[amountOfStations];
 
 Histogram Table("Cestujici", 0, 600,20);
-Histogram Trains("Vlaky", 0, 3600,20);
+Histogram Trains("Vlaky", 0, HOUR,20);
 
 
 int TimeOfDay() {
@@ -27,12 +27,15 @@ int TimeOfDay() {
 
 
 
+std::string getNameOfStation(int station) {
+	return namesOfStations[station];
+}
 
 
 int getPartOfDay(int time) {
-	if ((time >= 4*3600) && (time <= 8*3600+1800)) {
+	if ((time >= 4*HOUR) && (time <= 8*HOUR+30*MIN)) {
 		return 1;
-	} else if ((time > (8*3600+1800)) && (time < 21*3600)) {
+	} else if ((time > (8*HOUR+30*MIN)) && (time < 21*HOUR)) {
 		return 2;
 	} else {
 		return 0;
@@ -59,6 +62,7 @@ public:
 			currentStation = i;
 			Wait(this->store->Free() > waitingRooms[i].Length() ? ((waitingRooms[i].Length()+1)/amountOfEntersIntoWagon/amountOfWagons*timeToEnter) : ((this->store->Free()+1)/amountOfEntersIntoWagon/amountOfWagons*timeToEnter));
 			Release(Stations[i]);
+			this->currentTime = TimeOfDay();
 			currentStation = -1;
 			if (i < amountOfStations-1)
 				Wait(routes[i]);
@@ -66,11 +70,11 @@ public:
 			if (i == amountOfStations-1) {
 				this->getStore()->Leave((this->getStore()->Used()));
 				double usage = 100*(double)this->getUsed()/(double)this->getCapacity();
-				Print("Train: %d starting at %d hours| left station: %d | used: %d | capacity: %d | usage: %.2f %\n", getVectorIndex(), getInitDepartureTime()/3600, i, this->getUsed(), this->getCapacity(), usage);
+				Print("| Train starting at %02d:%02d | stopped in station:\t%s at %02d:%02d\t\t| used: %d\t| capacity: %d\t| usage: %.2f %\t\t|\n", getInitDepartureTime()/HOUR, (getInitDepartureTime()%HOUR)/MIN, getNameOfStation(i).c_str(), getCurrentTime()/HOUR, (getCurrentTime()%HOUR)/MIN, this->getUsed(), this->getCapacity(), usage);
 			}
 			if (i != amountOfStations-1) {
 				double usage = 100*(double)this->getUsed()/(double)this->getCapacity();
-				Print("Train: %d starting at %d hours | left station: %d | used: %d | capacity: %d | usage: %.2f %\n", getVectorIndex(), getInitDepartureTime()/3600, i, this->getUsed(), this->getCapacity(), usage);
+				Print("| Train starting at %02d:%02d | left the station:\t%s at %02d:%02d \t| used: %d\t| capacity: %d\t| usage: %.2f % \t|\n", getInitDepartureTime()/HOUR, (getInitDepartureTime()%HOUR)/MIN, getNameOfStation(i).c_str(), getCurrentTime()/HOUR, (getCurrentTime()%HOUR)/MIN, this->getUsed(), this->getCapacity(), usage);
 			}
 		}
 
@@ -196,7 +200,7 @@ public:
 		} else if (getPartOfDay(time) == 2) {
 			Activate(Time+Exponential(NonPeakTimeInterval/((passengers[station]*(1.00-PeakTimeParameter))/NonPeakTime)));
 		} else {
-			Activate(Time+Normal(3600, 55));
+			Activate(Time+Normal(HOUR, 55));
 		}
 
 		(new Passenger(station))->Activate();
@@ -210,14 +214,14 @@ class TrainGenerator : public Process {
 	void Behavior() {
 		Train* vlak;
 		unsigned long size = departures.size();
-		for (int i = 0; i < size; i++) {
+		for (int i = 0; (unsigned) i < size; ++i) {
 		prijezd:
 			int time = TimeOfDay();
 			if (time == departures.at(i)) {
 				vlak = (new Train(departures.at(i), trains.size()));
 				trains.push_back(vlak);
 				vlak->Activate(Time);
-				if (i == (size -1)) {
+				if ((unsigned)i == (size-1)) {
 					i = -1;
 				}
 			} else {
