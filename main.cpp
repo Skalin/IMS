@@ -17,7 +17,18 @@ Facility Stations[amountOfStations];
 Histogram Table("Cestujici", 0, HOUR/6, 20);
 Histogram Trains("Vlaky", 0, HOUR, 20);
 
-void printHelp() {}
+void printHelp() {
+	std::cout << "IMS 2017/2018 - Doprava zbozi nebo osob" << std::endl;
+	std::cout << "Individualni zadani: Vyuziti a efektivita vlakoveho spoje: Veseli - Bucovice - Slavkov - Brno\n"  << std::endl;
+	std::cout << "Autori: \tDominik Skala (xskala11) - vedouci"  << std::endl;
+	std::cout << "\t\tJan Hrboticky (xhrbot01)\n"  << std::endl;
+	std::cout << "Popis:"  << std::endl;
+	std::cout << "\t\tProgram provadi simulaci vlakove trate mezi mesty Veseli nad Moravou, Bucovicemi, Slavkovem u Brna a Brnem. Samotny program je modelem teto trate v jazyce C++.\n\t\tZa pomoci tohoto modelu se snazime modelovat efektivitu a zaplnenost vlaku na teto trati a snazime se zjistit, zda by se zde \"neuzivil\" jeste jeden vlak.\n\n"  << std::endl;
+	std::cout << "Argumenty programu:"  << std::endl;
+	std::cout << "\t\t-h, --help\t\tNapoveda tohoto programu (aktualne vytistena)"  << std::endl;
+	std::cout << "\t\t-t HHMM\t\t\tAktivaci tohoto parametru se prida vlak v urcity cas, pro jednodusi modelovani tohoto vlaku.\n\t\t\t\t\tCas musi byt ve formatu HHMM, kde HH jsou hodiny, ve kterych se aktivuje a MM jsou minuty ve kterych se vlak aktivuje"  << std::endl;
+	exit(EXIT_SUCCESS);
+}
 
 
 void throwException(const char *message) {
@@ -290,15 +301,15 @@ void parseArguments(int argc, char *argv[], int *newTrainTime, int *arg, bool *n
 			} else {
 				int hours = 0;
 				int minutes = 0;
-				for (unsigned int i = 0; i < strlen(str); i++) {
-					if (i == 0) {
-						hours += ((int) (str[i]-48))*10;
-					} else if (i == 1) {
-						hours += ((int) (str[i]-48));
-					} else if (i == 2) {
-						minutes += ((int) (str[i]-48))*10;
+				for (unsigned int j = 0; j < strlen(str); j++) {
+					if (j == 0) {
+						hours += ((int) (str[j]-48))*10;
+					} else if (j == 1) {
+						hours += ((int) (str[j]-48));
+					} else if (j == 2) {
+						minutes += ((int) (str[j]-48))*10;
 					} else {
-						minutes += ((int) (str[i]-48));
+						minutes += ((int) (str[j]-48));
 					}
 					*newTrainTime = HOUR*hours+MIN*minutes;
 				}
@@ -339,15 +350,15 @@ int main(int argc, char *argv[]) {
 	Run();
 
 	// Print output for all stations and waiting rooms in these stations
+	Print("\n\n\n");
 	for (unsigned int i = 0; i < amountOfStations; i++) {
 		Print("Stanice: %s\n", getNameOfStation(i).c_str());
 		Stations[i].Output();
-		if (i < amountOfStations-1)
+		if (i < amountOfStations-1) {
+			Print("Cekarna ve stanici: %s\n", getNameOfStation(i).c_str());
 			waitingRooms[i].Output();
-	}/*
-	for (unsigned int i = 0; i < trains.size(); i++) {
-		trains.at(i)->getStore()->Output();
-	}*/
+		}
+	}
 
 	return 0;
 };
