@@ -10,7 +10,7 @@
 std::vector<int> departures (departureTimes, departureTimes + sizeof(departureTimes) / sizeof(departureTimes[0]));
 std::vector<Train*> trains;
 
-std::string namesOfStations[4] = {"Veseli", "Bucovice", "Slavkov", "Brno"};
+std::string namesOfStations[amountOfStations] = {"Veseli", "Bucovice", "Slavkov", "Brno"};
 
 Queue waitingRooms[amountOfStations-1];
 
