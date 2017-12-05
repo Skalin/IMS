@@ -212,7 +212,7 @@ public:
 			double vystup = Random();
 		test:
 			if (Stations[i].Busy() && isInTrain() && vystup <= 0.1 ) {
-				Leave(*trains.at((unsigned long) getTrainInStation(i))->getStore());
+				Leave(*trains.at(getTrainInStation(i))->getStore(), 1);
 				this->inTrain = false;
 			} else {
 				Wait(1);
@@ -335,12 +335,11 @@ int main(int argc, char *argv[]) {
 	(new PassengerGenerator(2))->Activate();
 	(new TrainGenerator())->Activate();
 	Run();
-	Stations[0].Output();
-	Stations[1].Output();
-	Stations[2].Output();
-	Stations[3].Output();
-	for (unsigned int i = 0; i < sizeof(waitingRooms)/sizeof(waitingRooms[0]); i++) {
-		waitingRooms[i].Output();
+	for (unsigned int i = 0; i < amountOfStations; i++) {
+		Print("Stanice: %s\n", getNameOfStation(i).c_str());
+		Stations[i].Output();
+		if (i < amountOfStations-1)
+			waitingRooms[i].Output();
 	}/*
 	for (unsigned int i = 0; i < trains.size(); i++) {
 		trains.at(i)->getStore()->Output();
