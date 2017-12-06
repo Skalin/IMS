@@ -39,6 +39,8 @@ int getPartOfDay(int time);
 int TimeOfDay();
 std::string getNameOfStation(int station);
 void insertNewTrain();
+int getTrainInStation(int station);
+void throwException(const char *message);
 
 class Passenger;
 class Train;

@@ -14,6 +14,10 @@ int passengersLeftInTrain = 0;
 
 Facility Stations[amountOfStations];
 
+/*
+ * Function prints help on stdout and ends program with EXIT_SUCCESS return code
+ *
+ */
 void printHelp() {
 	std::cout << "IMS 2017/2018 - Doprava zbozi nebo osob" << std::endl;
 	std::cout << "Individualni zadani: Vyuziti a efektivita vlakoveho spoje: Veseli - Bucovice - Slavkov - Brno\n"  << std::endl;
@@ -28,24 +32,88 @@ void printHelp() {
 }
 
 
+/*
+ * Function parses arguments. If no arguments are given, program starts standard simulation. If -h or --help is given, program prints help and ends its work. If -t with HHMM value is passed, the program creates new train at the time given in HHMM
+ *
+ * @param int argc
+ * @param char *argv[]
+ * @param int *newTrainTime
+ * @param int *arg
+ * @param bool *newTrain
+ */
+void parseArguments(int argc, char *argv[], int *newTrainTime, int *arg, bool *newTrain) {
+
+	for (int i = 1; i < argc; i++){
+		if (strcmp(argv[i],"-h") == 0 || strcmp(argv[i], "--help") == 0) {
+			printHelp();
+		}
+
+		if (strcmp(argv[i], "-t") == 0) {
+			*arg = i+1;
+			char *str = (argv[*arg]);
+			if (strlen(str) > 4 || strlen(str) < 4) {
+				throwException("Wrong format of time, please enter time in format: HHMM");
+			} else {
+				int hours = 0;
+				int minutes = 0;
+				for (unsigned int j = 0; j < strlen(str); j++) {
+					if (j == 0) {
+						hours += ((int) (str[j]-48))*10;
+					} else if (j == 1) {
+						hours += ((int) (str[j]-48));
+					} else if (j == 2) {
+						minutes += ((int) (str[j]-48))*10;
+					} else {
+						minutes += ((int) (str[j]-48));
+					}
+					*newTrainTime = HOUR*hours+MIN*minutes;
+				}
+				*newTrain = true;
+			}
+		}
+	}
+}
+
+
+/*
+ * Function prints an error message on stderr and exits program
+ *
+ * @param const char *message message to be printed to stderr
+ */
 void throwException(const char *message) {
 	std::cerr << message << std::endl;
 	exit(EXIT_FAILURE);
 }
 
 
+/*
+ * Function returns time of current day
+ *
+ * @returns integer representation of time from current day
+ */
 int TimeOfDay() {
 	int time = ((int) Time % 86400);
 	return time;
 }
 
 
-
+/*
+ * Function returns string name of station from array namesOfStations
+ *
+ * @param int station integer representation of station from array namesOfStations
+ * @returns std::string name of station
+ */
 std::string getNameOfStation(int station) {
 	return namesOfStations[station];
 }
 
 
+/*
+ * Function returns part of day. Day is split into three parts - Peak time, Non-peak time and night where as Peak time is 1, Non-peak time is 2 and night is 0
+ *
+ * @param int time integer value of time in current day
+ * @returns int integer representation of current part of day
+ */
 int getPartOfDay(int time) {
 	if ((time >= 4*HOUR) && (time <= 8*HOUR+30*MIN)) {
 		return 1;
@@ -57,7 +125,10 @@ int getPartOfDay(int time) {
 }
 
 
-void insertNewTrain(int time) {
+/*
+ * Function inserts new train in
+ */
+void insertNewDepartureTime(int time) {
 
 }
 
@@ -172,6 +243,13 @@ private:
 };
 
 
+
+/*
+ * Function returns index of train that is currently in station
+ *
+ * @param int station integer representation of station
+ * @returns integer representation of train that is in station given in param
+ */
 int getTrainInStation(int station) {
 	for (unsigned int i = 0; i < trains.size(); i++) {
 		if ((trains.at(i)->getCurrentStation() == station)) {
@@ -180,7 +258,6 @@ int getTrainInStation(int station) {
 	}
 	return -1;
 }
-
 
 
 class Passenger : public Process {
@@ -198,7 +275,6 @@ public:
 
 	void Behavior() {
 		inTrain = false;
-
 
 		Into(waitingRooms[station]);
 	enterTrain:
@@ -259,6 +335,7 @@ public:
 
 };
 
+
 class TrainGenerator : public Process {
 	void Behavior() {
 		Train* vlak;
@@ -283,40 +360,10 @@ class TrainGenerator : public Process {
 };
 
 
-void parseArguments(int argc, char *argv[], int *newTrainTime, int *arg, bool *newTrain) {
 
-	for (int i = 1; i < argc; i++){
-		if (strcmp(argv[i],"-h") == 0 || strcmp(argv[i], "--help") == 0) {
-			printHelp();
-		}
-
-		if (strcmp(argv[i], "-t") == 0) {
-			*arg = i+1;
-			char *str = (argv[*arg]);
-			if (strlen(str) > 4 || strlen(str) < 4) {
-				throwException("Wrong format of time, please enter time in format: HHMM");
-			} else {
-				int hours = 0;
-				int minutes = 0;
-				for (unsigned int j = 0; j < strlen(str); j++) {
-					if (j == 0) {
-						hours += ((int) (str[j]-48))*10;
-					} else if (j == 1) {
-						hours += ((int) (str[j]-48));
-					} else if (j == 2) {
-						minutes += ((int) (str[j]-48))*10;
-					} else {
-						minutes += ((int) (str[j]-48));
-					}
-					*newTrainTime = HOUR*hours+MIN*minutes;
-				}
-				*newTrain = true;
-			}
-		}
-	}
-}
-
-
+/*
+ * Main function of program
+ */
 int main(int argc, char *argv[]) {
 
 	/* Default value of amount of days the simulation will run */
@@ -331,7 +378,7 @@ int main(int argc, char *argv[]) {
 	Print("Model vlakove trasy Bucovice - Brno\n");
 	if (newTrainFlag) {
 		Print("Simulace se pokusi vlozit novy vlak v case: %s\n", argv[arg]);
-		insertNewTrain(trainTime);
+		insertNewDepartureTime(trainTime);
 	}
 
 	RandomSeed(time(NULL));
@@ -349,7 +396,7 @@ int main(int argc, char *argv[]) {
 	// Print output for all stations and waiting rooms in these stations
 	Print("\n\n\n");
 	for (unsigned int i = 0; i < amountOfStations; i++) {
-		Print("Stanice: %s\n", getNameOfStation(i).c_str());
+		Print("\nStanice: %s\n", getNameOfStation(i).c_str());
 		Stations[i].Output();
 		if (i < amountOfStations-1) {
 			Print("Cekarna ve stanici: %s\n", getNameOfStation(i).c_str());
