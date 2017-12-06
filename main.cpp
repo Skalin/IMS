@@ -33,7 +33,7 @@ void printHelp() {
 	std::cout << "Autori: \tDominik Skala (xskala11) - vedouci"  << std::endl;
 	std::cout << "\t\tJan Hrboticky (xhrbot01)\n"  << std::endl;
 	std::cout << "Popis:"  << std::endl;
-	std::cout << "\t\tProgram provadi simulaci vlakove trate mezi mesty Veseli nad Moravou, Bucovicemi, Slavkovem u Brna a Brnem. Samotny program je modelem teto trate v jazyce C++.\n\t\tZa pomoci tohoto modelu se snazime modelovat efektivitu a zaplnenost vlaku na teto trati a snazime se zjistit, zda by se zde \"neuzivil\" jeste jeden vlak.\n\n"  << std::endl;
+	std::cout << "\t\tProgram provadi simulaci vlakove trate mezi mesty Veseli nad Moravou, Bucovicemi, Slavkovem u Brna a Brnem. Samotny program je modelem teto trate v jazyce C++.\n\t\tZa pomoci tohoto modelu se snazime modelovat efektivitu a zaplnenost vlaku na teto trati a snazime se zjistit, zda by se zde \"neuzivil\" jeste jeden vlak. Vystup je vzdy do souboru model.out.\n\n"  << std::endl;
 	std::cout << "Argumenty programu:"  << std::endl;
 	std::cout << "\t\t-h, --help\t\tNapoveda tohoto programu (aktualne vytistena)"  << std::endl;
 	std::cout << "\t\t-p MINUTES\t\tAktivaci tohoto parametru se upravi interval vyjezdu vlaku ve spicce. Vlaky ve vychozim stavu jezdi ve spicce každych " << PeakTimeIntervalTrain/MIN << " minut, jinak vyjíždí podle tohoto argumentu."  << std::endl;
