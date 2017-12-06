@@ -258,11 +258,7 @@ public:
 		double sumOfCapacity = 0;
 		for (unsigned int i = 0; i < AMOUNT_OF_STATIONS-1; i++) {
 			sumOfCapacity += this->getCapacity()*(int)ROUTES[i];
-			if (i == 0) {
-				sumOfFullness += this->getFilledIn(i)*(int)ROUTES[i]*2;
-			} else {
-				sumOfFullness += this->getFilledIn(i)*(int)ROUTES[i];
-			}
+			sumOfFullness += this->getFilledIn(i)*(int)ROUTES[i];
 		}
 
 		return (100*sumOfFullness/sumOfCapacity);
