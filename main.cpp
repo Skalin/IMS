@@ -376,22 +376,6 @@ class TrainGenerator : public Event {
 		} else {
 			Activate(Time+1);
 		}
-		/*
-		for (int i = 0; (unsigned) i < size; ++i) {
-	prijezd:
-			int time = TimeOfDay();
-			if (time == departures.at(i)) {
-				vlak = (new Train(departures.at(i), trains.size()));
-				trains.push_back(vlak);
-				vlak->Activate(Time);
-				if ((unsigned)i == (size-1)) {
-					i = -1;
-				}
-			} else {
-				Wait(MIN*.5);
-				goto prijezd;
-			}
-		}*/
 	}
 };
 
