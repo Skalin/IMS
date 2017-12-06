@@ -146,11 +146,12 @@ public:
 	void Behavior() {
 
 		currentStation = -1;
+		int passengersLeft = 0;
 		int entered = 0;
 		for (int i = 0; i < amountOfStations; i++) {
 			Seize(Stations[i]);
 			if (this->getUsed() > 0) {
-				passengersLeaveTrain();
+				passengersLeft = passengersLeaveTrain();
 			}
 			currentStation = i;
 			if (currentStation != amountOfStations-1  && !waitingRooms[currentStation].Empty()) {
@@ -159,7 +160,7 @@ public:
 					entered += 1;
 				}
 			}
-			Wait(entered/amountOfWagons/amountOfEntersIntoWagon);
+			Wait((passengersLeft+entered)/amountOfWagons/amountOfEntersIntoWagon); // vlak ceka ve stanici po dobu nastupovani
 			Release(Stations[i]);
 			this->filledIn[i] = this->getUsed();
 			this->currentTime = TimeOfDay(Time);
@@ -206,8 +207,9 @@ public:
 	}
 
 
-	void passengersLeaveTrain() {
+	int passengersLeaveTrain() {
 		int passengers = this->getUsed();
+		int passengersLeft = 0;
 		for (int i = 0; i < passengers; i++) {
 			if (Random() < 0.1) {
 				try {
@@ -216,7 +218,9 @@ public:
 					passengersLeftInTrain += 1;
 				}
 			}
+			passengersLeft += 1;
 		}
+		return passengersLeft;
 	}
 
 	void AllPassengersLeaveTrain() {
