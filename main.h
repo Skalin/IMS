@@ -32,7 +32,7 @@ int NonPeakTimeIntervalTrain = NON_PEAK_TIME_INTERVAL_PASSENGER; // interval mez
 const int TIME_TO_ENTER = 2; // doba vstupu jednoho cestujiciho do vlaku v sekundach
 const int AMOUNT_OF_WAGONS = 3; // pocet vagonu na jeden vlak
 const int AMOUNT_OF_SPACES_TO_SIT_IN_WAGON = 34; // pocet mist ve vagonu
-const int AMOUNT_OF_ENTERS_INTO_TRAIN = AMOUNT_OF_WAGONS*2; // pocet vstupu do VLAKU (vzdy dva vstupy na jeden vagon)
+const int AMOUNT_OF_ENTERS_INTO_TRAIN = AMOUNT_OF_WAGONS*2; // pocet vstupu do vlaku (vzdy dva vstupy na jeden vagon)
 
 const double PEAK_TIME_PARAMETER = 0.54; // procent lidi ve spicce
 
