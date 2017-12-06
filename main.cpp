@@ -340,7 +340,6 @@ public:
 		station = Station;
 	}
 
-
 	void Behavior() override {
 
 		int time = TimeOfDay(Time);
