@@ -14,26 +14,26 @@ const int DAY = 86400;
 const int HOUR = 3600;
 const int MIN = 60;
 
-const double routes[3] = {60.0*MIN, 10.0*MIN, 25.0*MIN}; // doba cesty na jednotlivych usecich - Veseli - Bucovice, Bucovice - Slavkov, Slavkov - Brno
-const double PeakTime = 3.5*MIN; // doba trvani spicky v minutach
-const double NonPeakTime = 13.5*MIN; // doba trvani nespicky v minutach (cas mezi spickou a noci)
+const double ROUTES[3] = {60.0*MIN, 10.0*MIN, 25.0*MIN}; // doba cesty na jednotlivych usecich - Veseli - Bucovice, Bucovice - Slavkov, Slavkov - Brno
+const double PEAK_TIME = 3.5*MIN; // doba trvani spicky v minutach
+const double NON_PEAK_TIME = 13.5*MIN; // doba trvani nespicky v minutach (cas mezi spickou a noci)
 
-int PeakTimeIntervalPassenger = HOUR; // interval mezi vlaky ve spicce
-int NonPeakTimeIntervalPassenger = 2*HOUR; // interval mezi vlaky mimo spicku
-int PeakTimeIntervalTrain = PeakTimeIntervalPassenger; // interval mezi vlaky ve spicce
-int NonPeakTimeIntervalTrain = NonPeakTimeIntervalPassenger; // interval mezi vlaky mimo spicku
-const int timeToEnter = 2;
-const int amountOfWagons = 3;
-const int amountOfSpacesToSitInWagon = 34;
-const int amountOfEntersIntoWagon = amountOfWagons*2;
+const int PEAK_TIME_INTERVAL_PASSENGER = HOUR; // interval mezi vlaky ve spicce
+const int NON_PEAK_TIME_INTERVAL_PASSENGER = 2*HOUR; // interval mezi vlaky mimo spicku
+int PeakTimeIntervalTrain = PEAK_TIME_INTERVAL_PASSENGER; // interval mezi vlaky ve spicce
+int NonPeakTimeIntervalTrain = NON_PEAK_TIME_INTERVAL_PASSENGER; // interval mezi vlaky mimo spicku
+const int TIME_TO_ENTER = 2; // doba vstupu jednoho cestujiciho do vlaku v sekundach
+const int AMOUNT_OF_WAGONS = 3; // pocet vagonu na jeden vlak
+const int AMOUNT_OF_SPACES_TO_SIT_IN_WAGON = 34; // pocet mist ve vagonu
+const int AMOUNT_OF_ENTERS_INTO_TRAIN = AMOUNT_OF_WAGONS*2; // pocet vstupu do VLAKU (vzdy dva vstupy na jeden vagon)
 
-const double PeakTimeParameter = 0.54; // procent lidi ve spicce
+const double PEAK_TIME_PARAMETER = 0.54; // procent lidi ve spicce
 
-const int passengers[3] = {550, 250, 200};
-const int amountOfStations = 4;
+const int AMOUNT_OF_STATIONS = 4; // celkovy pocet stanic
+const int PASSENGERS[AMOUNT_OF_STATIONS-1] = {550, 250, 200}; // priblizny pocet pasazeru ve stanicich Veseli ([0]), Bucovice ([1]) a Slavkov([2])
 
 void printHelp();
-int safe_toInt(std::string s);
+int stringToInt(std::string s);
 void parseArguments(int argc, char *argv[], int *peakTimeInterval, bool *peakTimeFlag, int *nonPeakTimeInterval, bool *nonPeakTimeFlag);
 int getPartOfDay(int time);
 int TimeOfDay(double timeDouble);

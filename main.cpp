@@ -4,13 +4,13 @@
 
 std::vector<Train*> trains;
 
-std::string namesOfStations[amountOfStations] = {"Veseli", "Bucovice", "Slavkov", "Brno"};
+std::string namesOfStations[AMOUNT_OF_STATIONS] = {"Veseli", "Bucovice", "Slavkov", "Brno"};
 
-Queue waitingRooms[amountOfStations-1];
+Queue waitingRooms[AMOUNT_OF_STATIONS-1];
 
 int passengersLeftInTrain = 0;
 
-Facility Stations[amountOfStations];
+Facility Stations[AMOUNT_OF_STATIONS];
 
 /*
  * Function prints help on stdout and ends program with EXIT_SUCCESS return code
@@ -30,7 +30,7 @@ void printHelp() {
 	exit(EXIT_SUCCESS);
 }
 
-int safe_toInt(std::string s) {
+int stringToInt(std::string s) {
 	int ret;
 	std::stringstream sStream(s);
 	for (char c:s) {
@@ -62,7 +62,7 @@ void parseArguments(int argc, char *argv[], int *peakTimeInterval, bool *peakTim
 		if (strcmp(argv[i], "-p") == 0) {
 			int tmp = *peakTimeInterval;
 			try {
-				tmp = safe_toInt(argv[i+1]);
+				tmp = stringToInt(argv[i+1]);
 			} catch (std::exception const &exception) {
 				throwException("ERROR: Wrong format of peak time interval");
 			}
@@ -73,7 +73,7 @@ void parseArguments(int argc, char *argv[], int *peakTimeInterval, bool *peakTim
 		if (strcmp(argv[i], "-n") == 0) {
 			int tmp = *nonPeakTimeInterval;
 			try {
-				tmp = safe_toInt(argv[i+1]);
+				tmp = stringToInt(argv[i+1]);
 			} catch (std::exception const &exception) {
 				throwException("ERROR: Wrong format of non-peak time interval");
 			}
@@ -138,7 +138,7 @@ class Train : public Process {
 public:
 	explicit Train(int time) : Process() {
 		this->setInitDepartureTime(time);
-		this->setStore(new Store((amountOfWagons)*amountOfSpacesToSitInWagon));
+		this->setStore(new Store((AMOUNT_OF_WAGONS)*AMOUNT_OF_SPACES_TO_SIT_IN_WAGON));
 		this->setCurrentTime(getInitDepartureTime());
 		this->setCurrentStation(-1);
 		this->setPassengersLeft(0);
@@ -147,31 +147,31 @@ public:
 
 
 	void Behavior() override {
-		for (int i = 0; i < amountOfStations; i++) {
+		for (int i = 0; i < AMOUNT_OF_STATIONS; i++) {
 			this->setEntered(0);
 			Seize(Stations[i]);
 			if (this->getUsed() > 0) {
 				this->setPassengersLeft(passengersLeaveTrain());
 			}
 			this->setCurrentStation(i);
-			if (currentStation != amountOfStations-1  && !waitingRooms[currentStation].Empty()) {
+			if (currentStation != AMOUNT_OF_STATIONS-1  && !waitingRooms[currentStation].Empty()) {
 				while (!waitingRooms[currentStation].Empty() && !this->store->Full()) {
 					waitingRooms[currentStation].GetFirst()->Activate();
 					this->setEntered(this->getEntered()+1);
 				}
 			}
-			Wait(((this->getPassengersLeft()+this->getEntered())/(amountOfWagons*amountOfEntersIntoWagon)*timeToEnter) + 20); // vlak ceka ve stanici po dobu nastupovani
+			Wait(((this->getPassengersLeft()+this->getEntered())/(AMOUNT_OF_ENTERS_INTO_TRAIN)*TIME_TO_ENTER) + 20); // vlak ceka ve stanici po dobu nastupovani
 			this->setFilledIn(i, this->getUsed());
 			this->setCurrentTime(TimeOfDay(Time));
 			Release(Stations[i]);
 			this->setCurrentStation(-1);
-			if (i < amountOfStations-1) {
+			if (i < AMOUNT_OF_STATIONS-1) {
 				double usage = 100*(double)this->getUsed()/(double)this->getCapacity();
 				Print("| Train starting at %02d:%02d | left the station:\t%s at %02d:%02d \t| used: %d\t| capacity: %d\t| usage: %.2f % \t\t\t\t|\n", getInitDepartureTime()/HOUR, (getInitDepartureTime()%HOUR)/MIN, getNameOfStation(i).c_str(), getCurrentTime()/HOUR, (getCurrentTime()%HOUR)/MIN, this->getUsed(), this->getCapacity(), usage);
-				Wait(routes[i]);
+				Wait(ROUTES[i]);
 			}
 
-			if (i == amountOfStations-1) {
+			if (i == AMOUNT_OF_STATIONS-1) {
 				this->AllPassengersLeaveTrain();
 				double usage = 100*(double)this->getUsed()/(double)this->getCapacity();
 				Print("| Train starting at %02d:%02d | ended in station:\t%s at %02d:%02d \t\t| used: %d\t| capacity: %d\t| usage: %.2f %\t\t\t\t\t|\n", getInitDepartureTime()/HOUR, (getInitDepartureTime()%HOUR)/MIN, getNameOfStation(i).c_str(), getCurrentTime()/HOUR, (getCurrentTime()%HOUR)/MIN, this->getUsed(), this->getCapacity(), usage);
@@ -246,9 +246,9 @@ public:
 	double getTrainFullness() const {
 		double sumOfFullness = 0;
 		double sumOfCapacity = 0;
-		for (unsigned int i = 0; i < amountOfStations-1; i++) {
-			sumOfCapacity += this->getCapacity()*(int)routes[i];
-			sumOfFullness += this->getFilledIn(i)*(int)routes[i];
+		for (unsigned int i = 0; i < AMOUNT_OF_STATIONS-1; i++) {
+			sumOfCapacity += this->getCapacity()*(int)ROUTES[i];
+			sumOfFullness += this->getFilledIn(i)*(int)ROUTES[i];
 		}
 
 		return (100*sumOfFullness/sumOfCapacity);
@@ -299,7 +299,7 @@ public:
 
 private:
 	int passengersLeft;
-	unsigned long filledIn[amountOfStations];
+	unsigned long filledIn[AMOUNT_OF_STATIONS];
 	int initDepartureTime;
 	Store *store;
 	int currentTime;
@@ -335,6 +335,7 @@ public:
 
 		int time = TimeOfDay(Time);
 
+		// if current part of day is night and passenger comes, he waits for an hour and if the time is still night, he leaves the system otherwise he enters queue and waits for train
 		if (getPartOfDay(time) == 0) {
 			Wait(HOUR);
 			time = TimeOfDay(Time);
@@ -342,6 +343,8 @@ public:
 				goto leave;
 			}
 		}
+
+		// passenger enters queue in station and waits until any train activates him
 		Into(waitingRooms[station]);
 	enterTrain:
 		Passivate();
@@ -366,9 +369,9 @@ public:
 	void Behavior() override {
 		int time = TimeOfDay(Time);
 		if (getPartOfDay(time) == 1) {
-			Activate(Time+Exponential(PeakTimeIntervalPassenger/MIN/((passengers[station]*PeakTimeParameter)/PeakTime)));
+			Activate(Time+Exponential(PEAK_TIME_INTERVAL_PASSENGER/MIN/((PASSENGERS[station]*PEAK_TIME_PARAMETER)/PEAK_TIME)));
 		} else if (getPartOfDay(time) == 2) {
-			Activate(Time+Exponential(NonPeakTimeIntervalPassenger/MIN/((passengers[station]*(1.00-PeakTimeParameter))/NonPeakTime)));
+			Activate(Time+Exponential(NON_PEAK_TIME_INTERVAL_PASSENGER/MIN/((PASSENGERS[station]*(1.00-PEAK_TIME_PARAMETER))/NON_PEAK_TIME)));
 		} else {
 			Activate(Time+Normal(HOUR, 55));
 		}
@@ -436,10 +439,10 @@ int main(int argc, char *argv[]) {
 	Print("|-------------------------------------------------------------------------------------------------------------------------------------------------------|");
 	// Print output for all stations and waiting rooms in these stations
 	Print("\n\n");
-	for (unsigned int i = 0; i < amountOfStations; i++) {
+	for (unsigned int i = 0; i < AMOUNT_OF_STATIONS; i++) {
 		Print("\nStanice: %s\n", getNameOfStation(i).c_str());
 		Stations[i].Output();
-		if (i < amountOfStations-1) {
+		if (i < AMOUNT_OF_STATIONS-1) {
 			Print("Cekarna ve stanici: %s\n", getNameOfStation(i).c_str());
 			waitingRooms[i].Output();
 		}
