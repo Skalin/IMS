@@ -142,28 +142,29 @@ public:
 		this->currentTime = initDepartureTime;
 		this->currentStation = -1;
 		this->passengersLeft = 0;
+		this->entered = 0;
 	}
 
 
 	void Behavior() override {
 		for (int i = 0; i < amountOfStations; i++) {
-			int entered = 0;
+			this->setEntered(0);
 			Seize(Stations[i]);
 			if (this->getUsed() > 0) {
-				this->passengersLeft = passengersLeaveTrain();
+				this->setPassengersLeft(passengersLeaveTrain());
 			}
-			this->currentStation = i;
+			setCurrentStation(i);
 			if (currentStation != amountOfStations-1  && !waitingRooms[currentStation].Empty()) {
 				while (!waitingRooms[currentStation].Empty() && !this->store->Full()) {
 					waitingRooms[currentStation].GetFirst()->Activate();
-					entered += 1;
+					this->setEntered(this->getEntered()+1);
 				}
 			}
-			Wait(((passengersLeft+entered)/(amountOfWagons*amountOfEntersIntoWagon)*timeToEnter) + 20); // vlak ceka ve stanici po dobu nastupovani
+			Wait(((this->passengersLeft+entered)/(amountOfWagons*amountOfEntersIntoWagon)*timeToEnter) + 20); // vlak ceka ve stanici po dobu nastupovani
+			setFilledIn(i, this->getUsed());
+			this->setCurrentTime(TimeOfDay(Time));
 			Release(Stations[i]);
-			this->filledIn[i] = this->getUsed();
-			this->currentTime = TimeOfDay(Time);
-			this->currentStation = -1;
+			this->setCurrentStation(-1);
 			if (i < amountOfStations-1) {
 				double usage = 100*(double)this->getUsed()/(double)this->getCapacity();
 				Print("| Train starting at %02d:%02d | left the station:\t%s at %02d:%02d \t| used: %d\t| capacity: %d\t| usage: %.2f % \t\t\t\t|\n", getInitDepartureTime()/HOUR, (getInitDepartureTime()%HOUR)/MIN, getNameOfStation(i).c_str(), getCurrentTime()/HOUR, (getCurrentTime()%HOUR)/MIN, this->getUsed(), this->getCapacity(), usage);
@@ -185,6 +186,35 @@ public:
 		}
 	}
 
+
+	void setPassengersLeft(int passengersLeft) {
+		Train::passengersLeft = passengersLeft;
+	}
+
+	void setInitDepartureTime(int initDepartureTime) {
+		Train::initDepartureTime = initDepartureTime;
+	}
+
+	void setStore(Store *store) {
+		Train::store = store;
+	}
+
+	void setCurrentTime(int currentTime) {
+		Train::currentTime = currentTime;
+	}
+
+	void setCurrentStation(int currentStation) {
+		Train::currentStation = currentStation;
+	}
+
+	void setEntered(int entered) {
+		Train::entered = entered;
+	}
+
+	void setFilledIn(int i, unsigned long amount) {
+		this->filledIn[i] = amount;
+	}
+
 	int getInitDepartureTime() const {
 		return initDepartureTime;
 	}
@@ -197,10 +227,44 @@ public:
 		return currentTime;
 	}
 
+	int getPassengersLeft() const {
+		return passengersLeft;
+	}
+
+	int getEntered() const {
+		return entered;
+	}
+
 	Store *getStore() const {
 		return store;
 	}
 
+	double getTrainFullness() const {
+		double sumOfFullness = 0;
+		double sumOfCapacity = 0;
+		for (unsigned int i = 0; i < amountOfStations-1; i++) {
+			sumOfCapacity += this->getCapacity()*(int)routes[i];
+			sumOfFullness += this->getFilledIn(i)*(int)routes[i];
+		}
+
+		return (100*sumOfFullness/sumOfCapacity);
+	}
+
+	unsigned long getUsed() const {
+		return this->getStore()->Used();
+	}
+
+	unsigned long getCapacity() const {
+		return this->getStore()->Capacity();
+	}
+
+	unsigned long getFilledIn(int i) const {
+		return filledIn[i];
+	}
+
+	bool isFull() {
+		return this->store->Full();
+	}
 
 	int passengersLeaveTrain() {
 		unsigned long passengers = this->getUsed();
@@ -229,28 +293,6 @@ public:
 		}
 	}
 
-	double getTrainFullness() const {
-		double sumOfFullness = 0;
-		double sumOfCapacity = 0;
-		for (unsigned int i = 0; i < amountOfStations-1; i++) {
-			sumOfCapacity += this->getCapacity()*(int)routes[i];
-			sumOfFullness += filledIn[i]*(int)routes[i];
-		}
-
-		return (100*sumOfFullness/sumOfCapacity);
-	}
-
-	unsigned long getUsed() const {
-		return this->getStore()->Used();
-	}
-
-	unsigned long getCapacity() const {
-		return this->getStore()->Capacity();
-	}
-
-	bool isFull() {
-		return this->store->Full();
-	}
 private:
 	int passengersLeft;
 	unsigned long filledIn[amountOfStations];
@@ -258,6 +300,7 @@ private:
 	Store *store;
 	int currentTime;
 	int currentStation;
+	int entered;
 };
 
 
