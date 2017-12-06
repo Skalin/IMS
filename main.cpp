@@ -402,7 +402,7 @@ class TrainGenerator : public Event {
 
 	void Behavior() override {
 		int time = TimeOfDay(Time);
-		if (getPartOfDay(time) == 1 && ((time > 4*HOUR+49*MIN && time < 5*HOUR+1*MIN) || (time > 6*HOUR+1*MIN))) {
+		if (getPartOfDay(time) == 1 && ((time > 4*HOUR+50*MIN && time < 5*HOUR+1*MIN) || (time > 6*HOUR+1*MIN))) {
 			auto *train = (new Train(time));
 			trains.push_back(train);
 			train->Activate(Time);
