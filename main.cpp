@@ -136,25 +136,23 @@ int getPartOfDay(int time) {
 
 class Train : public Process {
 public:
-	Train(int time, unsigned int size) : Process() {
-		this->vectorIndex = size;
+	explicit Train(int time) : Process() {
 		this->initDepartureTime = time;
 		this->store = new Store((amountOfWagons)*amountOfSpacesToSitInWagon);
 		this->currentTime = initDepartureTime;
+		this->currentStation = -1;
+		this->passengersLeft = 0;
 	}
 
 
-	void Behavior() {
-
-		currentStation = -1;
-		int passengersLeft = 0;
-		int entered = 0;
+	void Behavior() override {
 		for (int i = 0; i < amountOfStations; i++) {
+			int entered = 0;
 			Seize(Stations[i]);
 			if (this->getUsed() > 0) {
-				passengersLeft = passengersLeaveTrain();
+				this->passengersLeft = passengersLeaveTrain();
 			}
-			currentStation = i;
+			this->currentStation = i;
 			if (currentStation != amountOfStations-1  && !waitingRooms[currentStation].Empty()) {
 				while (!waitingRooms[currentStation].Empty() && !this->store->Full()) {
 					waitingRooms[currentStation].GetFirst()->Activate();
@@ -165,7 +163,7 @@ public:
 			Release(Stations[i]);
 			this->filledIn[i] = this->getUsed();
 			this->currentTime = TimeOfDay(Time);
-			currentStation = -1;
+			this->currentStation = -1;
 			if (i < amountOfStations-1) {
 				double usage = 100*(double)this->getUsed()/(double)this->getCapacity();
 				Print("| Train starting at %02d:%02d | left the station:\t%s at %02d:%02d \t| used: %d\t| capacity: %d\t| usage: %.2f % \t\t\t\t|\n", getInitDepartureTime()/HOUR, (getInitDepartureTime()%HOUR)/MIN, getNameOfStation(i).c_str(), getCurrentTime()/HOUR, (getCurrentTime()%HOUR)/MIN, this->getUsed(), this->getCapacity(), usage);
@@ -191,10 +189,6 @@ public:
 		return initDepartureTime;
 	}
 
-	unsigned int getVectorIndex() const {
-		return vectorIndex;
-	}
-
 	int getCurrentStation() const {
 		return currentStation;
 	}
@@ -209,9 +203,9 @@ public:
 
 
 	int passengersLeaveTrain() {
-		int passengers = this->getUsed();
+		unsigned long passengers = this->getUsed();
 		int passengersLeft = 0;
-		for (int i = 0; i < passengers; i++) {
+		for (unsigned long i = 0; i < passengers; i++) {
 			if (Random() < 0.2) {
 				try {
 					this->store->Leave(1);
@@ -258,14 +252,13 @@ public:
 		return this->store->Full();
 	}
 private:
+	int passengersLeft;
 	unsigned long filledIn[amountOfStations];
-	unsigned int vectorIndex;
 	int initDepartureTime;
 	Store *store;
 	int currentTime;
 	int currentStation;
 };
-
 
 
 /*
@@ -286,12 +279,12 @@ int getTrainInStation(int station) {
 
 class Passenger : public Process {
 public:
-	Passenger(int Station) : Process() {
+	explicit Passenger(int Station) : Process() {
 		station = Station;
 	}
 
 
-	void Behavior() {
+	void Behavior() override {
 
 		int time = TimeOfDay(Time);
 
@@ -305,8 +298,8 @@ public:
 		Into(waitingRooms[station]);
 	enterTrain:
 		Passivate();
-		if (Stations[station].Busy() && !trains.at(getTrainInStation(station))->isFull()) {
-			Enter(*trains.at(getTrainInStation(station))->getStore());
+		if (Stations[station].Busy() && !trains.at((unsigned) getTrainInStation(station))->isFull()) {
+			Enter(*trains.at((unsigned) getTrainInStation(station))->getStore());
 		} else {
 			goto enterTrain;
 		}
@@ -319,11 +312,11 @@ public:
 
 class PassengerGenerator : public Event {
 public:
-	PassengerGenerator(int Station) : Event() {
+	explicit PassengerGenerator(int Station) : Event() {
 		station = Station; // stanice 0 je Veseli, stanice 1 je Bucovice, 2 je Slavkov (negenerujeme nic)
 	}
 
-	void Behavior() {
+	void Behavior() override {
 		int time = TimeOfDay(Time);
 		if (getPartOfDay(time) == 1) {
 			Activate(Time+Exponential(PeakTimeIntervalPassenger/MIN/((passengers[station]*PeakTimeParameter)/PeakTime)));
@@ -341,15 +334,15 @@ public:
 
 class TrainGenerator : public Event {
 
-	void Behavior() {
+	void Behavior() override {
 		int time = TimeOfDay(Time);
 		if (getPartOfDay(time) == 1 && ((time > 4*HOUR+50*MIN && time < 5*HOUR+1*MIN) || (time > 6*HOUR+1*MIN))) {
-			Train *train = (new Train(time, (unsigned) trains.size()));
+			auto *train = (new Train(time));
 			trains.push_back(train);
 			train->Activate(Time);
 			Activate(Time+PeakTimeIntervalTrain);
 		} else if (getPartOfDay(time) == 2) {
-			Train *train = (new Train(time,  (unsigned) trains.size()));
+			auto *train = (new Train(time));
 			trains.push_back(train);
 			train->Activate(Time);
 			Activate(Time+NonPeakTimeIntervalTrain);
@@ -381,7 +374,7 @@ int main(int argc, char *argv[]) {
 		Print("Simulace nebezi s vychozim casem intervalu vyjezdu vlaku mimo spicku, vlaky mimo spicku vyjedou kazdych: %d minut\n", NonPeakTimeIntervalTrain/MIN);
 	}
 
-	RandomSeed(time(NULL));
+	RandomSeed(time(nullptr));
 	Init(0, (DAY*amountOfDays));
 
 	// Passenger and train generators
