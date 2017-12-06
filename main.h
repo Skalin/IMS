@@ -1,6 +1,13 @@
-//
-// Created by skalin on 2.12.17.
-//
+/**
+    IMS Simlib Model
+    main.h
+    Purpose: Simulates train behavior on route Veseli n.M. - Brno
+
+    @author Dominik Skala (xskala11) - project leader
+    @author Jan Hrboticky (xhrbot01)
+    @version 1.0
+*/
+
 
 #ifndef IMS_MAIN_H
 #define IMS_MAIN_H

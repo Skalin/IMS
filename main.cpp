@@ -1,3 +1,12 @@
+/**
+    IMS Simlib Model
+    main.cpp
+    Purpose: Simulates train behavior on route Veseli n.M. - Brno
+
+    @author Dominik Skala (xskala11) - project leader
+    @author Jan Hrboticky (xhrbot01)
+    @version 1.0
+*/
 
 #include "simlib.h"
 #include "main.h"
