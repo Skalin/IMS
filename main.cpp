@@ -197,7 +197,6 @@ public:
 		}
 	}
 
-
 	void removeTrain() {
 		trains.erase(trains.begin());
 	}
