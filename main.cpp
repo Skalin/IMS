@@ -392,9 +392,9 @@ int main(int argc, char *argv[]) {
 
 	// Run simulation
 	Run();
-
+	Print("|-------------------------------------------------------------------------------------------------------------------------------------------------------|");
 	// Print output for all stations and waiting rooms in these stations
-	Print("\n\n\n");
+	Print("\n\n");
 	for (unsigned int i = 0; i < amountOfStations; i++) {
 		Print("\nStanice: %s\n", getNameOfStation(i).c_str());
 		Stations[i].Output();
