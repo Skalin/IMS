@@ -135,7 +135,7 @@ std::string getNameOfStation(int station) {
  * @returns int integer representation of current part of day
  */
 int getPartOfDay(int time) {
-	if ((time >= (4*HOUR+20*MIN)) && (time <= (8*HOUR+30*MIN))) {
+	if ((time >= (4*HOUR+MIN)) && (time <= (8*HOUR+30*MIN))) {
 		return 1;
 	} else if (((time > (8*HOUR+30*MIN)) && (time <= (21*HOUR+2*MIN)))) {
 		return 2;
@@ -426,7 +426,7 @@ class TrainGenerator : public Event {
 int main(int argc, char *argv[]) {
 
 	/* Default value of amount of days the simulation will run */
-	double amountOfDays = 5.0; // 5 day
+	double amountOfDays = 30.0; // 5 day
 
 	bool modifiedPeakTimeInterval = false;
 	bool modifiedNonPeakTimeInterval = false;
