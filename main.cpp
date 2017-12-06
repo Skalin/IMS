@@ -25,7 +25,8 @@ void printHelp() {
 	std::cout << "\t\tProgram provadi simulaci vlakove trate mezi mesty Veseli nad Moravou, Bucovicemi, Slavkovem u Brna a Brnem. Samotny program je modelem teto trate v jazyce C++.\n\t\tZa pomoci tohoto modelu se snazime modelovat efektivitu a zaplnenost vlaku na teto trati a snazime se zjistit, zda by se zde \"neuzivil\" jeste jeden vlak.\n\n"  << std::endl;
 	std::cout << "Argumenty programu:"  << std::endl;
 	std::cout << "\t\t-h, --help\t\tNapoveda tohoto programu (aktualne vytistena)"  << std::endl;
-	std::cout << "\t\t-t HHMM\t\t\tAktivaci tohoto parametru se prida vlak v urcity cas, pro jednodusi modelovani tohoto vlaku.\n\t\t\t\t\tCas musi byt ve formatu HHMM, kde HH jsou hodiny, ve kterych se aktivuje a MM jsou minuty ve kterych se vlak aktivuje"  << std::endl;
+	std::cout << "\t\t-p MINUTES\t\tAktivaci tohoto parametru se upravi interval vyjezdu vlaku ve spicce. Vlaky ve vychozim stavu jezdi ve spicce každych " << PeakTimeIntervalTrain/MIN << " minut, jinak vyjíždí podle tohoto argumentu."  << std::endl;
+	std::cout << "\t\t-n MINUTES\t\tAktivaci tohoto parametru se upravi interval vyjezdu vlaku mimo spicku. Vlaky ve vychozim stavu jezdi mimo spicku kazdych " << NonPeakTimeIntervalTrain/MIN << " minut, jinak vyjíždí podle tohoto argumentu."  << std::endl;
 	exit(EXIT_SUCCESS);
 }
 
@@ -389,7 +390,7 @@ int main(int argc, char *argv[]) {
 	(new PassengerGenerator(1))->Activate();
 	(new PassengerGenerator(2))->Activate();
 
-	// Run simulation
+	// Run simulation and print fancy output
 	Print("|-------------------------------------------------------------------------------------------------------------------------------------------------------|\n");
 	Run();
 	Print("|-------------------------------------------------------------------------------------------------------------------------------------------------------|");
