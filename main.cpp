@@ -211,7 +211,7 @@ public:
 		int passengers = this->getUsed();
 		int passengersLeft = 0;
 		for (int i = 0; i < passengers; i++) {
-			if (Random() < 0.1) {
+			if (Random() < 0.2) {
 				try {
 					this->store->Leave(1);
 				} catch (std::exception const &e) {
