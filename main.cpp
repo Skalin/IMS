@@ -160,7 +160,7 @@ public:
 					entered += 1;
 				}
 			}
-			Wait((passengersLeft+entered)/amountOfWagons/amountOfEntersIntoWagon); // vlak ceka ve stanici po dobu nastupovani
+			Wait(((passengersLeft+entered)/(amountOfWagons*amountOfEntersIntoWagon)*timeToEnter) + 20); // vlak ceka ve stanici po dobu nastupovani
 			Release(Stations[i]);
 			this->filledIn[i] = this->getUsed();
 			this->currentTime = TimeOfDay(Time);
@@ -290,48 +290,27 @@ public:
 	}
 
 
-	bool isInTrain() {
-		return inTrain;
-	}
-
-
-
 	void Behavior() {
-		inTrain = false;
 
+		int time = TimeOfDay(Time);
 
+		if (getPartOfDay(time) == 0) {
+			Wait(2*HOUR);
+			time = TimeOfDay(Time);
+			if (getPartOfDay(time) == 0) {
+				goto leave;
+			}
+		}
 		Into(waitingRooms[station]);
 	enterTrain:
 		Passivate();
 		if (Stations[station].Busy() && !trains.at(getTrainInStation(station))->isFull()) {
 			Enter(*trains.at(getTrainInStation(station))->getStore());
-			inTrain = true;
 		} else {
 			goto enterTrain;
 		}
-
-
-/*
-		Into(waitingRooms[station]);
-	enterTrain:
-		if (isInQueue()) {
-			Print("Jsem v cekarne: %d", station);
-		}
-		Passivate();
-		if (Stations[station].Busy() && !trains.at(getTrainInStation(station))->isFull()) {
-			if (waitingRooms[station].Length() > 0) {
-				Enter(*trains.at(getTrainInStation(station))->getStore());
-			}
-			inTrain = true;
-		} else {
-			goto enterTrain;
-		}
-
-
-*/
+	leave:;
 	}
-
-	bool inTrain;
 	int station;
 };
 
