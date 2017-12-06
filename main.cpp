@@ -91,8 +91,8 @@ void throwException(const char *message) {
  *
  * @returns integer representation of time from current day
  */
-int TimeOfDay() {
-	int time = ((int) Time % 86400);
+int TimeOfDay(double timerino) {
+	int time = ((int) timerino % 86400);
 	return time;
 }
 
@@ -117,7 +117,7 @@ std::string getNameOfStation(int station) {
 int getPartOfDay(int time) {
 	if ((time >= 4*HOUR) && (time <= 8*HOUR+30*MIN)) {
 		return 1;
-	} else if ((time > (8*HOUR+30*MIN)) && (time < 21*HOUR)) {
+	} else if ((time > (8*HOUR+30*MIN)) && (time <= 21*HOUR)) {
 		return 2;
 	} else {
 		return 0;
@@ -136,24 +136,33 @@ void insertNewDepartureTime(int time) {
 class Train : public Process {
 public:
 	Train(int time, unsigned int size) : Process() {
-		initDepartureTime = time;
-		vectorIndex = size;
-		store = new Store((amountOfWagons)*amountOfSpacesToSitInWagon);
-		currentTime = initDepartureTime;
+		this->vectorIndex = size;
+		this->initDepartureTime = time;
+		this->store = new Store((amountOfWagons)*amountOfSpacesToSitInWagon);
+		this->currentTime = initDepartureTime;
 	}
 
 
 	void Behavior() {
 
 		currentStation = -1;
+		int entered = 0;
 		for (int i = 0; i < amountOfStations; i++) {
-			this->currentTime = TimeOfDay();
 			Seize(Stations[i]);
+			if (this->getUsed() > 0) {
+				passengersLeaveTrain();
+			}
 			currentStation = i;
-			Wait(this->store->Free() > waitingRooms[i].Length() ? ((waitingRooms[i].Length()+1)/amountOfEntersIntoWagon/amountOfWagons*timeToEnter) : ((this->store->Free()+1)/amountOfEntersIntoWagon/amountOfWagons*timeToEnter));
+			if (currentStation != amountOfStations-1  && !waitingRooms[currentStation].Empty()) {
+				while (!waitingRooms[currentStation].Empty() && !this->store->Full()) {
+					waitingRooms[currentStation].GetFirst()->Activate();
+					entered += 1;
+				}
+			}
+			Wait(entered/amountOfWagons/amountOfEntersIntoWagon);
 			Release(Stations[i]);
 			this->filledIn[i] = this->getUsed();
-			this->currentTime = TimeOfDay();
+			this->currentTime = TimeOfDay(Time);
 			currentStation = -1;
 			if (i < amountOfStations-1) {
 				double usage = 100*(double)this->getUsed()/(double)this->getCapacity();
@@ -162,7 +171,7 @@ public:
 			}
 
 			if (i == amountOfStations-1) {
-				passengersLeaveTrain();
+				AllPassengersLeaveTrain();
 				double usage = 100*(double)this->getUsed()/(double)this->getCapacity();
 				Print("| Train starting at %02d:%02d | ended in station:\t%s at %02d:%02d \t\t| used: %d\t| capacity: %d\t| usage: %.2f %\t\t\t\t\t|\n", getInitDepartureTime()/HOUR, (getInitDepartureTime()%HOUR)/MIN, getNameOfStation(i).c_str(), getCurrentTime()/HOUR, (getCurrentTime()%HOUR)/MIN, this->getUsed(), this->getCapacity(), usage);
 				double trainFullness = this->getTrainFullness();
@@ -171,11 +180,8 @@ public:
 				} else {
 					Print("| Train starting at %02d:%02d will not be fulfilled on majority of route and therefore it is not good to run it in this time with a coefficient of: %.1f \t|\n", getInitDepartureTime()/HOUR, (getInitDepartureTime()%HOUR)/MIN, trainFullness);
 				}
+				trains.erase(trains.begin());
 			}
-		}
-
-		if (trains.size() == getVectorIndex()) {
-			trains.clear();
 		}
 	}
 
@@ -200,8 +206,20 @@ public:
 	}
 
 
-
 	void passengersLeaveTrain() {
+		int passengers = this->getUsed();
+		for (int i = 0; i < passengers; i++) {
+			if (Random() < 0.1) {
+				try {
+					this->store->Leave(1);
+				} catch (std::exception const &e) {
+					passengersLeftInTrain += 1;
+				}
+			}
+		}
+	}
+
+	void AllPassengersLeaveTrain() {
 		while(!this->store->Empty()) {
 			try {
 				this->store->Leave(1);
@@ -209,7 +227,8 @@ public:
 				passengersLeftInTrain += 1;
 			}
 
-		}}
+		}
+	}
 
 	double getTrainFullness() const {
 		double sumOfFullness = 0;
@@ -276,34 +295,36 @@ public:
 	void Behavior() {
 		inTrain = false;
 
+
 		Into(waitingRooms[station]);
 	enterTrain:
-		int nearest = getTrainInStation(station);
-		if (Stations[station].Busy() && !trains.at((unsigned long) nearest)->isFull()) {
-			if (waitingRooms[station].Length() > 0) {
-				waitingRooms[station].GetFirst();
-				Enter(*trains.at((unsigned long) nearest)->getStore());
-			}
+		Passivate();
+		if (Stations[station].Busy() && !trains.at(getTrainInStation(station))->isFull()) {
+			Enter(*trains.at(getTrainInStation(station))->getStore());
 			inTrain = true;
 		} else {
-			Wait(1);
 			goto enterTrain;
 		}
 
 
-		for (int i = station+1; i < amountOfStations; i++) {
-
-			double vystup = Random();
-		test:
-			if (Stations[i].Busy() && isInTrain() && vystup <= 0.1 ) {
-				Leave(*trains.at(getTrainInStation(i))->getStore(), 1);
-				this->inTrain = false;
-			} else {
-				Wait(1);
-				goto test;
+/*
+		Into(waitingRooms[station]);
+	enterTrain:
+		if (isInQueue()) {
+			Print("Jsem v cekarne: %d", station);
+		}
+		Passivate();
+		if (Stations[station].Busy() && !trains.at(getTrainInStation(station))->isFull()) {
+			if (waitingRooms[station].Length() > 0) {
+				Enter(*trains.at(getTrainInStation(station))->getStore());
 			}
+			inTrain = true;
+		} else {
+			goto enterTrain;
 		}
 
+
+*/
 	}
 
 	bool inTrain;
@@ -319,29 +340,41 @@ public:
 	}
 
 	void Behavior() {
-		int time = TimeOfDay();
+		int time = TimeOfDay(Time);
 		if (getPartOfDay(time) == 1) {
-			Activate(Time+Exponential(PeakTimeInterval/((passengers[station]*PeakTimeParameter)/PeakTime)));
+			Activate(Time+Exponential(PeakTimeInterval/MIN/((passengers[station]*PeakTimeParameter)/PeakTime)));
 		} else if (getPartOfDay(time) == 2) {
-			Activate(Time+Exponential(NonPeakTimeInterval/((passengers[station]*(1.00-PeakTimeParameter))/NonPeakTime)));
+			Activate(Time+Exponential(NonPeakTimeInterval/MIN/((passengers[station]*(1.00-PeakTimeParameter))/NonPeakTime)));
 		} else {
 			Activate(Time+Normal(HOUR, 55));
 		}
 
 		(new Passenger(station))->Activate();
 	}
-
 	int station;
-
 };
 
 
-class TrainGenerator : public Process {
+class TrainGenerator : public Event {
+
 	void Behavior() {
-		Train* vlak;
-		unsigned long size = departures.size();
+		int time = TimeOfDay(Time);
+		if (getPartOfDay(time) == 1 && time > 4*HOUR+50*MIN) {
+			Train *train = (new Train(time, (unsigned) trains.size()));
+			trains.push_back(train);
+			train->Activate(Time);
+			Activate(Time+PeakTimeInterval);
+		} else if (getPartOfDay(time) == 2) {
+			Train *train = (new Train(time,  (unsigned) trains.size()));
+			trains.push_back(train);
+			train->Activate(Time);
+			Activate(Time+NonPeakTimeInterval);
+		} else {
+			Activate(Time+1);
+		}
+		/*
 		for (int i = 0; (unsigned) i < size; ++i) {
-		prijezd:
+	prijezd:
 			int time = TimeOfDay();
 			if (time == departures.at(i)) {
 				vlak = (new Train(departures.at(i), trains.size()));
@@ -351,14 +384,12 @@ class TrainGenerator : public Process {
 					i = -1;
 				}
 			} else {
-				Wait(MIN);
+				Wait(MIN*.5);
 				goto prijezd;
 			}
-		}
+		}*/
 	}
-
 };
-
 
 
 /*
@@ -375,7 +406,7 @@ int main(int argc, char *argv[]) {
 
 	parseArguments(argc, argv, &trainTime, &arg, &newTrainFlag);
 
-	Print("Model vlakove trasy Bucovice - Brno\n");
+	Print("Model vlakove trasy Veseli - Brno\n");
 	if (newTrainFlag) {
 		Print("Simulace se pokusi vlozit novy vlak v case: %s\n", argv[arg]);
 		insertNewDepartureTime(trainTime);
@@ -391,6 +422,7 @@ int main(int argc, char *argv[]) {
 	(new PassengerGenerator(2))->Activate();
 
 	// Run simulation
+	Print("|-------------------------------------------------------------------------------------------------------------------------------------------------------|\n");
 	Run();
 	Print("|-------------------------------------------------------------------------------------------------------------------------------------------------------|");
 	// Print output for all stations and waiting rooms in these stations

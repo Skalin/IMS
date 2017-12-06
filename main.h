@@ -19,9 +19,10 @@ const int MIN = 60;
 const double routes[3] = {60.0*MIN, 10.0*MIN, 25.0*MIN}; // doba cesty na jednotlivych usecich - Veseli - Bucovice, Bucovice - Slavkov, Slavkov - Brno
 const double PeakTime = 180.5; // doba trvani spicky v minutach
 const double NonPeakTime = 780.5; // doba trvani nespicky v minutach(cas mezi spickou a noci)
+const double Night = HOUR*24 - NonPeakTime - PeakTime;
 
-const double PeakTimeInterval = HOUR/MIN; // interval mezi vlaky ve spicce
-const double NonPeakTimeInterval = 2*HOUR/MIN; // interval mezi vlaky mimo spicku
+const double PeakTimeInterval = HOUR; // interval mezi vlaky ve spicce
+const double NonPeakTimeInterval = 2*HOUR; // interval mezi vlaky mimo spicku
 const int timeToEnter = 2;
 const int amountOfWagons = 3;
 const int amountOfSpacesToSitInWagon = 34;
