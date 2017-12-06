@@ -137,7 +137,7 @@ std::string getNameOfStation(int station) {
 int getPartOfDay(int time) {
 	if ((time >= (4*HOUR+50*MIN)) && (time <= (8*HOUR+30*MIN))) {
 		return 1;
-	} else if (((time > (8*HOUR+30*MIN)) && (time <= (21*HOUR+2*MIN))) || (time > (4*HOUR) && time < (4*HOUR+50*MIN))) {
+	} else if (((time > (8*HOUR+30*MIN)) && (time <= (21*HOUR+2*MIN)))) {
 		return 2;
 	} else {
 		return 0;
@@ -402,7 +402,7 @@ class TrainGenerator : public Event {
 
 	void Behavior() override {
 		int time = TimeOfDay(Time);
-		if (getPartOfDay(time) == 1 && ((time > 4*HOUR+50*MIN && time < 5*HOUR+1*MIN) || (time > 6*HOUR+1*MIN))) {
+		if (getPartOfDay(time) == 1 && ((time > 4*HOUR+49*MIN && time < 5*HOUR+1*MIN) || (time > 6*HOUR+1*MIN))) {
 			auto *train = (new Train(time));
 			trains.push_back(train);
 			train->Activate(Time);
