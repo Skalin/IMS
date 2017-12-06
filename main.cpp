@@ -178,14 +178,14 @@ public:
 			this->setCurrentStation(-1);
 			if (i < AMOUNT_OF_STATIONS-1) {
 				double usage = 100*(double)this->getUsed()/(double)this->getCapacity();
-				Print("| Train starting at %02d:%02d | left the station:\t%s at %02d:%02d \t| used: %d\t| capacity: %d\t| usage: %.2f % \t\t\t\t|\n", getInitDepartureTime()/HOUR, (getInitDepartureTime()%HOUR)/MIN, getNameOfStation(i).c_str(), getCurrentTime()/HOUR, (getCurrentTime()%HOUR)/MIN, this->getUsed(), this->getCapacity(), usage);
+				//Print("| Train starting at %02d:%02d | left the station:\t%s at %02d:%02d \t| used: %d\t| capacity: %d\t| usage: %.2f % \t\t\t\t|\n", getInitDepartureTime()/HOUR, (getInitDepartureTime()%HOUR)/MIN, getNameOfStation(i).c_str(), getCurrentTime()/HOUR, (getCurrentTime()%HOUR)/MIN, this->getUsed(), this->getCapacity(), usage);
 				Wait(ROUTES[i]);
 			}
 
 			if (i == AMOUNT_OF_STATIONS-1) {
 				this->AllPassengersLeaveTrain();
 				double usage = 100*(double)this->getUsed()/(double)this->getCapacity();
-				Print("| Train starting at %02d:%02d | ended in station:\t%s at %02d:%02d \t\t| used: %d\t| capacity: %d\t| usage: %.2f %\t\t\t\t\t|\n", getInitDepartureTime()/HOUR, (getInitDepartureTime()%HOUR)/MIN, getNameOfStation(i).c_str(), getCurrentTime()/HOUR, (getCurrentTime()%HOUR)/MIN, this->getUsed(), this->getCapacity(), usage);
+				//Print("| Train starting at %02d:%02d | ended in station:\t%s at %02d:%02d \t\t| used: %d\t| capacity: %d\t| usage: %.2f %\t\t\t\t\t|\n", getInitDepartureTime()/HOUR, (getInitDepartureTime()%HOUR)/MIN, getNameOfStation(i).c_str(), getCurrentTime()/HOUR, (getCurrentTime()%HOUR)/MIN, this->getUsed(), this->getCapacity(), usage);
 				double trainFullness = this->getTrainFullness();
 				if(trainFullness >= 70.0) {
 					Print("| Train starting at %02d:%02d will be fulfilled on majority of route and therefore it is good to run it on this track with a coefficient of: %.1f \t\t|\n", getInitDepartureTime()/HOUR, (getInitDepartureTime()%HOUR)/MIN, trainFullness);
@@ -432,6 +432,8 @@ int main(int argc, char *argv[]) {
 	bool modifiedNonPeakTimeInterval = false;
 	parseArguments(argc, argv, &PeakTimeIntervalTrain, &modifiedPeakTimeInterval, &NonPeakTimeIntervalTrain, &modifiedNonPeakTimeInterval);
 
+	SetOutput("model.out");
+	
 	Print("Model vlakove trasy Veseli n.M. - Brno\n");
 	if (modifiedPeakTimeInterval) {
 		Print("Simulace nebezi s vychozim casem intervalu vyjezdu vlaku ve spicce, vlaky ve spicce vyjedou kazdych: %d minut\n", PeakTimeIntervalTrain/MIN);
@@ -439,7 +441,7 @@ int main(int argc, char *argv[]) {
 	if (modifiedNonPeakTimeInterval) {
 		Print("Simulace nebezi s vychozim casem intervalu vyjezdu vlaku mimo spicku, vlaky mimo spicku vyjedou kazdych: %d minut\n", NonPeakTimeIntervalTrain/MIN);
 	}
-
+	
 	RandomSeed(time(nullptr));
 	Init(0, (DAY*amountOfDays));
 
