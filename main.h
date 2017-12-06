@@ -22,7 +22,7 @@ const int HOUR = MIN*MIN; // doba jedne hodiny
 const int DAY = 24*HOUR; // doba jednoho dne v sekundach
 
 const double ROUTES[3] = {60.0*MIN, 10.0*MIN, 25.0*MIN}; // doba cesty na jednotlivych usecich - Veseli - Bucovice, Bucovice - Slavkov, Slavkov - Brno
-const double PEAK_TIME = 3.5*MIN; // doba trvani spicky v minutach
+const double PEAK_TIME = 4.5*MIN; // doba trvani spicky v minutach
 const double NON_PEAK_TIME = 13.5*MIN; // doba trvani nespicky v minutach (cas mezi spickou a noci)
 
 const int PEAK_TIME_INTERVAL_PASSENGER = HOUR; // interval mezi vlaky ve spicce
