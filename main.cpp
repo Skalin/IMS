@@ -153,7 +153,7 @@ public:
 			if (this->getUsed() > 0) {
 				this->setPassengersLeft(passengersLeaveTrain());
 			}
-			setCurrentStation(i);
+			this->setCurrentStation(i);
 			if (currentStation != amountOfStations-1  && !waitingRooms[currentStation].Empty()) {
 				while (!waitingRooms[currentStation].Empty() && !this->store->Full()) {
 					waitingRooms[currentStation].GetFirst()->Activate();
@@ -161,7 +161,7 @@ public:
 				}
 			}
 			Wait(((this->passengersLeft+entered)/(amountOfWagons*amountOfEntersIntoWagon)*timeToEnter) + 20); // vlak ceka ve stanici po dobu nastupovani
-			setFilledIn(i, this->getUsed());
+			this->setFilledIn(i, this->getUsed());
 			this->setCurrentTime(TimeOfDay(Time));
 			Release(Stations[i]);
 			this->setCurrentStation(-1);
@@ -172,7 +172,7 @@ public:
 			}
 
 			if (i == amountOfStations-1) {
-				AllPassengersLeaveTrain();
+				this->AllPassengersLeaveTrain();
 				double usage = 100*(double)this->getUsed()/(double)this->getCapacity();
 				Print("| Train starting at %02d:%02d | ended in station:\t%s at %02d:%02d \t\t| used: %d\t| capacity: %d\t| usage: %.2f %\t\t\t\t\t|\n", getInitDepartureTime()/HOUR, (getInitDepartureTime()%HOUR)/MIN, getNameOfStation(i).c_str(), getCurrentTime()/HOUR, (getCurrentTime()%HOUR)/MIN, this->getUsed(), this->getCapacity(), usage);
 				double trainFullness = this->getTrainFullness();
@@ -181,11 +181,15 @@ public:
 				} else {
 					Print("| Train starting at %02d:%02d will not be fulfilled on majority of route and therefore it is not good to run it in this time with a coefficient of: %.1f \t|\n", getInitDepartureTime()/HOUR, (getInitDepartureTime()%HOUR)/MIN, trainFullness);
 				}
-				trains.erase(trains.begin());
+				this->removeTrain();
 			}
 		}
 	}
 
+
+	void removeTrain() {
+		trains.erase(trains.begin());
+	}
 
 	void setPassengersLeft(int passengersLeft) {
 		Train::passengersLeft = passengersLeft;
