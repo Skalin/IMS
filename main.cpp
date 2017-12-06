@@ -1,9 +1,7 @@
 
-#include <cstring>
 #include "simlib.h"
 #include "main.h"
 
-std::vector<int> departures (departureTimes, departureTimes + sizeof(departureTimes) / sizeof(departureTimes[0]));
 std::vector<Train*> trains;
 
 std::string namesOfStations[amountOfStations] = {"Veseli", "Bucovice", "Slavkov", "Brno"};
@@ -31,45 +29,55 @@ void printHelp() {
 	exit(EXIT_SUCCESS);
 }
 
+int safe_toInt(std::string s) {
+	int ret;
+	std::stringstream sStream(s);
+	for (char c:s) {
+		if (!isdigit(c)) {
+			throw std::invalid_argument("unknown argument value");
+		}
+	}
+	if (sStream >> ret) {
+		return ret;
+	} else {
+		throw std::invalid_argument("unknown argument value");
+	}
+}
+
 
 /*
  * Function parses arguments. If no arguments are given, program starts standard simulation. If -h or --help is given, program prints help and ends its work. If -t with HHMM value is passed, the program creates new train at the time given in HHMM
  *
  * @param int argc
  * @param char *argv[]
- * @param int *newTrainTime
- * @param int *arg
- * @param bool *newTrain
  */
-void parseArguments(int argc, char *argv[], int *newTrainTime, int *arg, bool *newTrain) {
+void parseArguments(int argc, char *argv[], int *peakTimeInterval, bool *peakTimeFlag, int *nonPeakTimeInterval, bool *nonPeakTimeFlag) {
 
 	for (int i = 1; i < argc; i++){
 		if (strcmp(argv[i],"-h") == 0 || strcmp(argv[i], "--help") == 0) {
 			printHelp();
 		}
 
-		if (strcmp(argv[i], "-t") == 0) {
-			*arg = i+1;
-			char *str = (argv[*arg]);
-			if (strlen(str) > 4 || strlen(str) < 4) {
-				throwException("Wrong format of time, please enter time in format: HHMM");
-			} else {
-				int hours = 0;
-				int minutes = 0;
-				for (unsigned int j = 0; j < strlen(str); j++) {
-					if (j == 0) {
-						hours += ((int) (str[j]-48))*10;
-					} else if (j == 1) {
-						hours += ((int) (str[j]-48));
-					} else if (j == 2) {
-						minutes += ((int) (str[j]-48))*10;
-					} else {
-						minutes += ((int) (str[j]-48));
-					}
-					*newTrainTime = HOUR*hours+MIN*minutes;
-				}
-				*newTrain = true;
+		if (strcmp(argv[i], "-p") == 0) {
+			int tmp = *peakTimeInterval;
+			try {
+				tmp = safe_toInt(argv[i+1]);
+			} catch (std::exception const &exception) {
+				throwException("ERROR: Wrong format of peak time interval");
 			}
+			*peakTimeInterval = tmp*MIN;
+			*peakTimeFlag = true;
+		}
+
+		if (strcmp(argv[i], "-n") == 0) {
+			int tmp = *nonPeakTimeInterval;
+			try {
+				tmp = safe_toInt(argv[i+1]);
+			} catch (std::exception const &exception) {
+				throwException("ERROR: Wrong format of non-peak time interval");
+			}
+			*nonPeakTimeInterval = tmp*MIN;
+			*nonPeakTimeFlag = true;
 		}
 	}
 }
@@ -91,8 +99,8 @@ void throwException(const char *message) {
  *
  * @returns integer representation of time from current day
  */
-int TimeOfDay(double timerino) {
-	int time = ((int) timerino % 86400);
+int TimeOfDay(double timeDouble) {
+	int time = ((int) timeDouble % 86400);
 	return time;
 }
 
@@ -287,7 +295,7 @@ public:
 		int time = TimeOfDay(Time);
 
 		if (getPartOfDay(time) == 0) {
-			Wait(2*HOUR);
+			Wait(HOUR);
 			time = TimeOfDay(Time);
 			if (getPartOfDay(time) == 0) {
 				goto leave;
@@ -317,9 +325,9 @@ public:
 	void Behavior() {
 		int time = TimeOfDay(Time);
 		if (getPartOfDay(time) == 1) {
-			Activate(Time+Exponential(PeakTimeInterval/MIN/((passengers[station]*PeakTimeParameter)/PeakTime)));
+			Activate(Time+Exponential(PeakTimeIntervalPassenger/MIN/((passengers[station]*PeakTimeParameter)/PeakTime)));
 		} else if (getPartOfDay(time) == 2) {
-			Activate(Time+Exponential(NonPeakTimeInterval/MIN/((passengers[station]*(1.00-PeakTimeParameter))/NonPeakTime)));
+			Activate(Time+Exponential(NonPeakTimeIntervalPassenger/MIN/((passengers[station]*(1.00-PeakTimeParameter))/NonPeakTime)));
 		} else {
 			Activate(Time+Normal(HOUR, 55));
 		}
@@ -338,17 +346,18 @@ class TrainGenerator : public Event {
 			Train *train = (new Train(time, (unsigned) trains.size()));
 			trains.push_back(train);
 			train->Activate(Time);
-			Activate(Time+PeakTimeInterval);
+			Activate(Time+PeakTimeIntervalTrain);
 		} else if (getPartOfDay(time) == 2) {
 			Train *train = (new Train(time,  (unsigned) trains.size()));
 			trains.push_back(train);
 			train->Activate(Time);
-			Activate(Time+NonPeakTimeInterval);
+			Activate(Time+NonPeakTimeIntervalTrain);
 		} else {
 			Activate(Time+1);
 		}
 	}
 };
+
 
 
 /*
@@ -359,16 +368,16 @@ int main(int argc, char *argv[]) {
 	/* Default value of amount of days the simulation will run */
 	double amountOfDays = 1.0;
 
-	int trainTime = 0;
-	bool newTrainFlag = false;
-	int arg = 1;
+	bool modifiedPeakTimeInterval = false;
+	bool modifiedNonPeakTimeInterval = false;
+	parseArguments(argc, argv, &PeakTimeIntervalTrain, &modifiedPeakTimeInterval, &NonPeakTimeIntervalTrain, &modifiedNonPeakTimeInterval);
 
-	parseArguments(argc, argv, &trainTime, &arg, &newTrainFlag);
-
-	Print("Model vlakove trasy Veseli - Brno\n");
-	if (newTrainFlag) {
-		Print("Simulace se pokusi vlozit novy vlak v case: %s\n", argv[arg]);
-		insertNewDepartureTime(trainTime);
+	Print("Model vlakove trasy Veseli n.M. - Brno\n");
+	if (modifiedPeakTimeInterval) {
+		Print("Simulace nebezi s vychozim casem intervalu vyjezdu vlaku ve spicce, vlaky ve spicce vyjedou kazdych: %d minut\n", PeakTimeIntervalTrain/MIN);
+	}
+	if (modifiedNonPeakTimeInterval) {
+		Print("Simulace nebezi s vychozim casem intervalu vyjezdu vlaku mimo spicku, vlaky mimo spicku vyjedou kazdych: %d minut\n", NonPeakTimeIntervalTrain/MIN);
 	}
 
 	RandomSeed(time(NULL));

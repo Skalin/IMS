@@ -7,39 +7,37 @@
 
 #include <iostream>
 #include <cstring>
-#include <string>
 #include <sstream>
 #include <vector>
-#include <cmath>
 
 const int DAY = 86400;
 const int HOUR = 3600;
 const int MIN = 60;
 
 const double routes[3] = {60.0*MIN, 10.0*MIN, 25.0*MIN}; // doba cesty na jednotlivych usecich - Veseli - Bucovice, Bucovice - Slavkov, Slavkov - Brno
-const double PeakTime = 180.5; // doba trvani spicky v minutach
-const double NonPeakTime = 780.5; // doba trvani nespicky v minutach(cas mezi spickou a noci)
-const double Night = HOUR*24 - NonPeakTime - PeakTime;
+const double PeakTime = 3.5*MIN; // doba trvani spicky v minutach
+const double NonPeakTime = 13.5*MIN; // doba trvani nespicky v minutach (cas mezi spickou a noci)
 
-const double PeakTimeInterval = HOUR; // interval mezi vlaky ve spicce
-const double NonPeakTimeInterval = 2*HOUR; // interval mezi vlaky mimo spicku
+int PeakTimeIntervalPassenger = HOUR; // interval mezi vlaky ve spicce
+int NonPeakTimeIntervalPassenger = 2*HOUR; // interval mezi vlaky mimo spicku
+int PeakTimeIntervalTrain = PeakTimeIntervalPassenger; // interval mezi vlaky ve spicce
+int NonPeakTimeIntervalTrain = NonPeakTimeIntervalPassenger; // interval mezi vlaky mimo spicku
 const int timeToEnter = 2;
 const int amountOfWagons = 3;
 const int amountOfSpacesToSitInWagon = 34;
 const int amountOfEntersIntoWagon = amountOfWagons*2;
 
 const double PeakTimeParameter = 0.54; // procent lidi ve spicce
-const double TrainsInPeakTime = PeakTime/PeakTimeInterval;
-const double TrainsInNonPeakTime = NonPeakTime/NonPeakTimeInterval;
 
 const int passengers[3] = {550, 250, 200};
 const int amountOfStations = 4;
-const int departureTimes[] = {4*HOUR+50*MIN, 6*HOUR+MIN, 7*HOUR+MIN, 9*HOUR+MIN, 11*HOUR+MIN, 13*HOUR+MIN, 15*HOUR+MIN, 17*HOUR+MIN, 19*HOUR+MIN, 21*HOUR+MIN};
 
+void printHelp();
+int safe_toInt(std::string s);
+void parseArguments(int argc, char *argv[], int *peakTimeInterval, bool *peakTimeFlag, int *nonPeakTimeInterval, bool *nonPeakTimeFlag);
 int getPartOfDay(int time);
-int TimeOfDay();
+int TimeOfDay(double timeDouble);
 std::string getNameOfStation(int station);
-void insertNewTrain();
 int getTrainInStation(int station);
 void throwException(const char *message);
 
