@@ -17,9 +17,9 @@
 #include <sstream>
 #include <vector>
 
-const int DAY = 86400;
-const int HOUR = 3600;
-const int MIN = 60;
+const int MIN = 60; // doba jedne minuty
+const int HOUR = MIN*MIN; // doba jedne hodiny
+const int DAY = 24*HOUR; // doba jednoho dne v sekundach
 
 const double ROUTES[3] = {60.0*MIN, 10.0*MIN, 25.0*MIN}; // doba cesty na jednotlivych usecich - Veseli - Bucovice, Bucovice - Slavkov, Slavkov - Brno
 const double PEAK_TIME = 3.5*MIN; // doba trvani spicky v minutach
