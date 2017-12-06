@@ -135,9 +135,9 @@ std::string getNameOfStation(int station) {
  * @returns int integer representation of current part of day
  */
 int getPartOfDay(int time) {
-	if ((time >= 4*HOUR) && (time <= 8*HOUR+30*MIN)) {
+	if ((time >= (4*HOUR+50*MIN)) && (time <= (8*HOUR+30*MIN))) {
 		return 1;
-	} else if ((time > (8*HOUR+30*MIN)) && (time <= 21*HOUR+2*MIN)) {
+	} else if (((time > (8*HOUR+30*MIN)) && (time <= (21*HOUR+2*MIN))) || (time > (4*HOUR) && time < (4*HOUR+50*MIN))) {
 		return 2;
 	} else {
 		return 0;
@@ -258,7 +258,11 @@ public:
 		double sumOfCapacity = 0;
 		for (unsigned int i = 0; i < AMOUNT_OF_STATIONS-1; i++) {
 			sumOfCapacity += this->getCapacity()*(int)ROUTES[i];
-			sumOfFullness += this->getFilledIn(i)*(int)ROUTES[i];
+			if (i == 0) {
+				sumOfFullness += this->getFilledIn(i)*(int)ROUTES[i]/2;
+			} else {
+				sumOfFullness += this->getFilledIn(i)*(int)ROUTES[i];
+			}
 		}
 
 		return (100*sumOfFullness/sumOfCapacity);

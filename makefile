@@ -1,13 +1,17 @@
-all:	 clean ims clean-obj
+CPP=g++
+CPFLAGS= -std=c++11 -Wall
+CPPSIMLIB= -lm -lsimlib
 
-ims: main.cpp
-	g++ -std=c++11 -Wall -m64 -O2 -g -I /home/skalin/Programming/simlib/src main.cpp /home/skalin/Programming/simlib/src/simlib.so /home/skalin/Programming/simlib/src/simlib.h -o ims
+all:     clean ims clean-obj
+
+ims:
+        $(CPP) $(CPFLAGS) main.cpp -o ims $(CPPSIMLIB)
 
 run:
-	./ims
+        ./ims
 
 clean-obj:
-	rm -rf *.o
+        rm -rf *.o
 
 clean:
-	rm -rf ims
+        rm -rf ims
