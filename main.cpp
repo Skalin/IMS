@@ -18,6 +18,8 @@ std::string namesOfStations[AMOUNT_OF_STATIONS] = {"Veseli", "Bucovice", "Slavko
 Queue waitingRooms[AMOUNT_OF_STATIONS-1];
 
 int passengersLeftInTrain = 0;
+int passengersTiredOfWaitingAtNight = 0;
+int passengersNotTiredOfWaitingAtNight = 0;
 
 Facility Stations[AMOUNT_OF_STATIONS];
 
@@ -346,10 +348,13 @@ public:
 
 		// if current part of day is night and passenger comes, he waits for an hour and if the time is still night, he leaves the system otherwise he enters queue and waits for train
 		if (getPartOfDay(time) == 0) {
-			Wait(HOUR);
+			Wait(55*MIN);
 			time = TimeOfDay(Time);
 			if (getPartOfDay(time) == 0) {
+				passengersTiredOfWaitingAtNight += 1;
 				goto leave;
+			} else {
+				passengersNotTiredOfWaitingAtNight += 1;
 			}
 		}
 
@@ -442,12 +447,15 @@ int main(int argc, char *argv[]) {
 	(new PassengerGenerator(1))->Activate();
 	(new PassengerGenerator(2))->Activate();
 
-	// Run simulation and print fancy output
+	// Run simulation and print personal statistics
 	Print("|-------------------------------------------------------------------------------------------------------------------------------------------------------|\n");
 	Run();
 	Print("|-------------------------------------------------------------------------------------------------------------------------------------------------------|");
-	// Print output for all stations and waiting rooms in these stations
 	Print("\n\n");
+	Print("Pasazeru, ktere unavilo cekani ve stanici v noci a po hodine od vstupu odesli: %d\n", passengersTiredOfWaitingAtNight);
+	Print("Pasazeru, kteri vyckali v noci: %d\n", passengersNotTiredOfWaitingAtNight);
+	Print("\n\n");
+	// Print output for all stations and waiting rooms in these stations
 	for (unsigned int i = 0; i < AMOUNT_OF_STATIONS; i++) {
 		Print("\nStanice: %s\n", getNameOfStation(i).c_str());
 		Stations[i].Output();
