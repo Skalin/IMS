@@ -424,7 +424,7 @@ class TrainGenerator : public Event {
 int main(int argc, char *argv[]) {
 
 	/* Default value of amount of days the simulation will run */
-	double amountOfDays = 30.0; // 5 day
+	double amountOfDays = 1.0; // 5 day
 
 	bool modifiedPeakTimeInterval = false;
 	bool modifiedNonPeakTimeInterval = false;
