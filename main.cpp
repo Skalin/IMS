@@ -137,12 +137,12 @@ int getPartOfDay(int time) {
 class Train : public Process {
 public:
 	explicit Train(int time) : Process() {
-		setInitDepartureTime(time);
-		setStore(new Store((amountOfWagons)*amountOfSpacesToSitInWagon));
-		this->currentTime = initDepartureTime;
-		this->currentStation = -1;
-		this->passengersLeft = 0;
-		this->entered = 0;
+		this->setInitDepartureTime(time);
+		this->setStore(new Store((amountOfWagons)*amountOfSpacesToSitInWagon));
+		this->setCurrentTime(getInitDepartureTime());
+		this->setCurrentStation(-1);
+		this->setPassengersLeft(0);
+		this->setEntered(0);
 	}
 
 
