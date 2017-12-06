@@ -125,14 +125,6 @@ int getPartOfDay(int time) {
 }
 
 
-/*
- * Function inserts new train in
- */
-void insertNewDepartureTime(int time) {
-
-}
-
-
 class Train : public Process {
 public:
 	Train(int time, unsigned int size) : Process() {
