@@ -137,8 +137,8 @@ int getPartOfDay(int time) {
 class Train : public Process {
 public:
 	explicit Train(int time) : Process() {
-		this->initDepartureTime = time;
-		this->store = new Store((amountOfWagons)*amountOfSpacesToSitInWagon);
+		setInitDepartureTime(time);
+		setStore(new Store((amountOfWagons)*amountOfSpacesToSitInWagon));
 		this->currentTime = initDepartureTime;
 		this->currentStation = -1;
 		this->passengersLeft = 0;
@@ -160,7 +160,7 @@ public:
 					this->setEntered(this->getEntered()+1);
 				}
 			}
-			Wait(((this->passengersLeft+entered)/(amountOfWagons*amountOfEntersIntoWagon)*timeToEnter) + 20); // vlak ceka ve stanici po dobu nastupovani
+			Wait(((this->getPassengersLeft()+this->getEntered())/(amountOfWagons*amountOfEntersIntoWagon)*timeToEnter) + 20); // vlak ceka ve stanici po dobu nastupovani
 			this->setFilledIn(i, this->getUsed());
 			this->setCurrentTime(TimeOfDay(Time));
 			Release(Stations[i]);
